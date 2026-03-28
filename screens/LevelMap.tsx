@@ -152,7 +152,7 @@ export const LevelMap: React.FC<LevelMapProps> = ({
   );
 
   return (
-    <div className="min-h-screen bg-[#65a30d] bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] flex flex-col items-center p-4 relative overflow-y-auto">
+    <div className="min-h-screen bg-[#65a30d] bg-[url('/assets/patterns/cubes.png')] flex flex-col items-center p-4 relative overflow-y-auto">
       
       {/* Back Button */}
       <button 

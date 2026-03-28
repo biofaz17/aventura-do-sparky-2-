@@ -174,7 +174,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     Nível {progress.unlockedLevels}: O próximo desafio aguarda sua lógica.
                     </p>
                     <Button onClick={onPlayMission} size="lg" variant="primary" className="shadow-blue-300/50 shadow-lg w-full md:w-auto">
-                    <Map className="mr-2" /> Jogar Agora
+                    <Map className="mr-2" /> JOGAR AGORA
                     </Button>
                 </div>
             </div>

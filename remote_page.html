@@ -3,7 +3,7 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <title>Aventura de Código do Sparky</title>
     
@@ -17,53 +17,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
     
     <style>
-      body, html, #root {
-        height: 100%;
-        width: 100%;
-        margin: 0;
-        padding: 0;
-        overflow: hidden; /* Trava o scroll da página */
-        position: fixed; /* Fixa o corpo para evitar bounce no iOS */
-        inset: 0;
-      }
-      /* Ensure the app content renders above the subtle pattern overlay */
-      #root { position: relative; z-index: 1; }
-
-      /* Local background pattern (copied from remote bundle) */
-      body::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background-image: url('/assets/patterns/stardust.png');
-        background-repeat: repeat;
-        opacity: 0.06;
-        pointer-events: none;
-        z-index: 0;
-      }
       body {
         font-family: 'Nunito', sans-serif;
         background-color: #f0f9ff;
         user-select: none;
-        -webkit-user-select: none;
         overscroll-behavior: none;
-        touch-action: none; /* Desabilita toques padrão globais, reabilita em containers específicos */
       }
-      /* Habilita scroll e toque onde necessário */
-      .scrollable-y {
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        touch-action: pan-y;
-      }
-      .scrollable-x {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        touch-action: pan-x;
-      }
-      /* Elementos clicáveis */
-      button, a, input {
-        touch-action: manipulation;
-      }
-      
       h1, h2, h3, .font-heading {
         font-family: 'Fredoka One', cursive;
       }
@@ -84,10 +43,29 @@
       }
     </style>
 
-    <link rel="stylesheet" href="/index.css">
-  </head>
+    <!-- Import Map com Versões Estáveis (React 18) -->
+
+  <link rel="stylesheet" href="/index.css">
+    <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "react-dom": "https://esm.sh/react-dom@18.2.0",
+    "lucide-react": "https://esm.sh/lucide-react@0.292.0?external=react,react-dom",
+    "framer-motion": "https://esm.sh/framer-motion@10.16.4?external=react,react-dom",
+    "canvas-confetti": "https://esm.sh/canvas-confetti@1.6.0",
+    "react-hot-toast": "https://esm.sh/react-hot-toast@2.4.1?external=react,react-dom",
+    "react-dom/": "https://esm.sh/react-dom@^18.2.3/",
+    "react/": "https://esm.sh/react@^18.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.33.0"
+  }
+}
+</script>
+  <script type="module" crossorigin src="/assets/index-DPrPnwDt.js"></script>
+</head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-  </body>
+    <!-- Carrega a aplicação -->
+</body>
 </html>

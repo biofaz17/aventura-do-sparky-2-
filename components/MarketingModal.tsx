@@ -64,7 +64,7 @@ export const MarketingModal: React.FC<MarketingModalProps> = ({ onUpgrade, onClo
         {/* Header Visual */}
         <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-800 p-8 pt-10 text-center relative overflow-hidden">
            {/* Background Pattern */}
-           <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+           <div className="absolute inset-0 opacity-10 bg-[url('/assets/patterns/cubes.png')]"></div>
            
            <div className="relative z-10">
               <div className="inline-flex items-center gap-2 bg-yellow-400 text-yellow-900 px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest mb-6 shadow-lg transform -rotate-2">

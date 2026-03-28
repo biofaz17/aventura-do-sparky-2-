@@ -1,171 +1,151 @@
-
 import React, { useState } from 'react';
 import { Button } from '../components/Button';
 import { UserProfile, SubscriptionTier } from '../types';
-import { User, Lock, Gamepad2, PlayCircle, LogIn, UserPlus } from 'lucide-react';
+import { User, Lock, Gamepad2, LogIn } from 'lucide-react';
 import { SparkyLogo } from '../components/SparkyLogo';
-import toast from 'react-hot-toast';
+import { supabase } from '../services/supabase';
 
 interface AuthScreenProps {
   onLogin: (user: UserProfile) => void;
+  onAdminAccess?: () => void;
 }
 
-type AuthMode = 'login' | 'register';
-
-export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
-  const [authMode, setAuthMode] = useState<AuthMode>('register');
+export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onAdminAccess }) => {
+  const [adminClicks, setAdminClicks] = useState(0);
   
-  // Form States
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
-  const [age, setAge] = useState('');
-  const [parentEmail, setParentEmail] = useState('');
-  
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  // Helper para gerar ID consistente (Simulando Backend)
   const generateUserId = (username: string) => {
       return 'user_' + username.toLowerCase().trim().replace(/\s+/g, '');
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
     const userId = generateUserId(name);
     const storageKey = `sparky_user_${userId}`;
     const storedData = localStorage.getItem(storageKey);
 
-    if (!storedData) {
-        setError('Usuário não encontrado. Verifique o nome ou crie uma conta.');
-        return;
+    let foundUser: UserProfile | null = null;
+
+    // 1. Tentar ler do LocalStorage (Caso já tenha logado neste PC antes)
+    if (storedData) {
+        try {
+            const localUser: UserProfile = JSON.parse(storedData);
+            if (localUser.password === password) {
+                foundUser = localUser;
+            } else {
+                setError('Senha incorreta.');
+                setLoading(false);
+                return;
+            }
+        } catch (err) {
+            console.error(err);
+        }
     }
 
-    try {
-        const user: UserProfile = JSON.parse(storedData);
-        
-        // Verificação de Senha (Simples para Demo)
-        if (user.password && user.password !== password) {
-            setError('Senha incorreta.');
+    // 2. Se não achou (Conta Nova criada pelo Admin), buscar na Nuvem (Supabase)
+    if (!foundUser) {
+        try {
+            const cleanUsername = name.toLowerCase().trim().replace(/\s+/g, '');
+            const { data, error: dbError } = await supabase
+                .from('users')
+                .select('profile_data, password')
+                .eq('username', cleanUsername)
+                .single();
+            
+            if (dbError || !data) {
+                setError(dbError?.message?.includes('não configurado')
+                   ? 'O modo online (nuvem) está offline. Crie a conta ou tente novamente mais tarde.' 
+                   : 'Usuário não localizado no sistema. Verifique o nome digitado.');
+                setLoading(false);
+                return;
+            }
+
+            if (data.password !== password) {
+                setError('Senha incorreta.');
+                setLoading(false);
+                return;
+            }
+
+            // O Admin gerou este objeto e salvou no banco
+            foundUser = data.profile_data as UserProfile;
+
+            // Faz o "download" persistindo para funcionar offline depois
+            localStorage.setItem(storageKey, JSON.stringify(foundUser));
+            
+        } catch (err) {
+            setError('Falha de conexão com os servidores Sparky. Tente novamente mais tarde.');
+            setLoading(false);
             return;
         }
-
-        // Login Sucesso
-        onLogin({ ...user, lastActive: Date.now() });
-    } catch (err) {
-        setError('Erro ao ler dados do usuário.');
-    }
-  };
-
-  const handleRegister = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    const userId = generateUserId(name);
-    const storageKey = `sparky_user_${userId}`;
-
-    // Verifica se já existe
-    if (localStorage.getItem(storageKey)) {
-        setError('Este nome de usuário já existe. Tente outro ou faça login.');
-        return;
     }
 
-    if (password.length < 4) {
-        setError('A senha deve ter pelo menos 4 caracteres.');
-        return;
+    // 3. Efetuar Mapeamento Final e Login
+    if (foundUser) {
+        onLogin({ ...foundUser, lastActive: Date.now() });
     }
-
-    // Cria novo usuário
-    const newUser: UserProfile = {
-      id: userId,
-      name: name.trim(),
-      password: password, // Persiste a senha
-      parentEmail: parentEmail || 'pai@exemplo.com',
-      age: parseInt(age) || 7,
-      subscription: SubscriptionTier.FREE, 
-      progress: {
-        unlockedLevels: 1, 
-        stars: 0,          
-        creativeProjects: 0,
-        totalBlocksUsed: 0, 
-        secretsFound: 0
-      },
-      settings: {
-        soundEnabled: true,
-        musicEnabled: true
-      },
-      isGuest: false,
-      lastActive: Date.now()
-    };
-
-    // Salva "no banco" (LocalStorage)
-    localStorage.setItem(storageKey, JSON.stringify(newUser));
-    
-    // Autentica
-    onLogin(newUser);
+    setLoading(false);
   };
 
   const handleGuestPlay = () => {
     const guestUser: UserProfile = {
       id: 'guest_' + Date.now(),
-      name: 'Visitante',
+      name: 'Explorador',
       parentEmail: '',
       age: 7, 
       subscription: SubscriptionTier.FREE,
       progress: {
-        unlockedLevels: 1,
-        stars: 0,
-        creativeProjects: 0,
-        totalBlocksUsed: 0,
-        secretsFound: 0
+        unlockedLevels: 1, stars: 0, creativeProjects: 0, totalBlocksUsed: 0, secretsFound: 0
       },
-      settings: {
-        soundEnabled: true,
-        musicEnabled: true
-      },
+      settings: { soundEnabled: true, musicEnabled: true },
       isGuest: true
     };
     onLogin(guestUser);
   };
 
-  const toggleMode = (mode: AuthMode) => {
-      setAuthMode(mode);
-      setError('');
-      setPassword('');
+  const handleLogoClick = () => {
+      const newClicks = adminClicks + 1;
+      setAdminClicks(newClicks);
+      if (newClicks >= 5) {
+          setAdminClicks(0);
+          const code = prompt("Acesso Restrito (Painel Admin). Senha Mestre:");
+          if (code === "SparkyMaster") {
+              if (onAdminAccess) onAdminAccess();
+          } else if (code) {
+              alert("Acesso Negado.");
+          }
+      }
   };
 
   return (
-    <div className="min-h-full w-full bg-indigo-500 flex items-center justify-center p-4 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] py-12">
+    <div className="min-h-full w-full bg-indigo-500 flex items-center justify-center p-4 bg-[url('/assets/patterns/cubes.png')] py-12">
       <div className="bg-white rounded-[2.5rem] p-8 md:p-12 w-full max-w-md shadow-2xl relative overflow-hidden flex flex-col">
         {/* Decor */}
         <div className={`absolute top-0 left-0 w-full h-4 bg-gradient-to-r transition-colors duration-500 from-blue-400 via-purple-400 to-yellow-400`} />
         
-        <div className="flex flex-col items-center mb-6">
-           <div className="transform hover:scale-105 transition-transform duration-300">
+        <div className="flex flex-col items-center mb-8 mt-2">
+           <div 
+              className="transform hover:scale-105 transition-transform duration-300 cursor-pointer"
+              onClick={handleLogoClick}
+              title="A aventura começa aqui!"
+           >
              <SparkyLogo size="lg" />
            </div>
+           <p className="text-slate-500 font-bold text-sm mt-4 tracking-wide text-center">
+             Bem-vindo à maior jornada <br/> de programação!
+           </p>
         </div>
 
-        {/* Tabs */}
-        <div className="flex p-1 bg-slate-100 rounded-xl mb-6">
-            <button 
-                onClick={() => toggleMode('login')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all ${authMode === 'login' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-            >
-                <LogIn size={16} /> Entrar
-            </button>
-            <button 
-                onClick={() => toggleMode('register')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all ${authMode === 'register' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-            >
-                <UserPlus size={16} /> Criar Conta
-            </button>
-        </div>
-
-        <form onSubmit={authMode === 'login' ? handleLogin : handleRegister} className="space-y-4">
+        <form onSubmit={handleLogin} className="space-y-4">
           
           <div>
-            <label className="block text-sm font-bold text-slate-600 mb-1 ml-2">Nome de Usuário (Criança)</label>
+            <label className="block text-sm font-bold text-slate-600 mb-1 ml-2">Qual seu Nome de Explorador?</label>
             <div className="relative">
                <User className="absolute left-4 top-3.5 text-slate-400" size={20} />
                <input 
@@ -173,14 +153,15 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
                  value={name}
                  onChange={e => setName(e.target.value)}
                  className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl p-3 pl-12 font-bold text-slate-700 focus:border-indigo-400 outline-none transition"
-                 placeholder="Ex: supermario"
+                 placeholder="Ex: Pedro123"
                  required
+                 disabled={loading}
                />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-slate-600 mb-1 ml-2">Senha Secreta</label>
+            <label className="block text-sm font-bold text-slate-600 mb-1 ml-2">Senha do Jogador</label>
             <div className="relative">
                <Lock className="absolute left-4 top-3.5 text-slate-400" size={20} />
                <input 
@@ -188,44 +169,12 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
                  value={password}
                  onChange={e => setPassword(e.target.value)}
                  className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl p-3 pl-12 font-bold text-slate-700 focus:border-indigo-400 outline-none transition"
-                 placeholder="****"
+                 placeholder="Digite a senha liberada"
                  required
+                 disabled={loading}
                />
             </div>
           </div>
-
-          {authMode === 'register' && (
-            <div className="animate-fadeIn space-y-4">
-                <div>
-                <label className="block text-sm font-bold text-slate-600 mb-1 ml-2">Idade</label>
-                <input 
-                    type="number" 
-                    value={age}
-                    onChange={e => setAge(e.target.value)}
-                    className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl p-3 font-bold text-slate-700 focus:border-indigo-400 outline-none transition"
-                    placeholder="Ex: 8"
-                    min="5"
-                    max="16"
-                    required
-                />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-bold text-slate-600 mb-1 ml-2">Email do Responsável</label>
-                    <div className="relative">
-                    <input 
-                        type="email" 
-                        value={parentEmail}
-                        onChange={e => setParentEmail(e.target.value)}
-                        className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl p-3 font-bold text-slate-700 focus:border-indigo-400 outline-none transition"
-                        placeholder="pai@email.com"
-                        required
-                    />
-                    </div>
-                    <p className="text-[10px] text-slate-400 mt-1 ml-2">Para recuperar senha e receber relatórios.</p>
-                </div>
-            </div>
-          )}
 
           {error && (
               <div className="bg-red-50 text-red-600 text-sm font-bold p-3 rounded-xl border border-red-100 text-center animate-shake">
@@ -236,9 +185,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
           <Button 
             variant={'primary'} 
             size="lg" 
-            className={`w-full mt-4`}
+            className={`w-full mt-4 flex items-center justify-center gap-2`}
+            disabled={loading}
           >
-             {authMode === 'login' ? 'Continuar Aventura' : 'Começar Aventura'}
+             <LogIn size={20} /> {loading ? 'Sincronizando...' : 'ENTRAR NO JOGO'}
           </Button>
         </form>
 
@@ -250,9 +200,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
 
         <button 
           onClick={handleGuestPlay}
-          className="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 text-sm touch-manipulation"
+          className="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 text-sm"
+          disabled={loading}
         >
-           <Gamepad2 size={18} /> Testar como Visitante (Sem salvar)
+           <Gamepad2 size={18} /> JOGAR VERSÃO GRÁTIS
         </button>
 
       </div>

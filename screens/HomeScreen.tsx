@@ -43,7 +43,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onStart }) => {
 
             <div className="pt-4 flex flex-col items-center gap-4">
               <Button onClick={onStart} size="lg" variant="primary" className="w-full md:w-auto px-12 py-5 text-2xl shadow-blue-300 shadow-xl hover:shadow-2xl scale-110 hover:scale-115 transition-all">
-                <Play fill="currentColor" className="mr-2" /> COMEÇAR
+                <Play fill="currentColor" className="mr-2" /> JOGAR AGORA
               </Button>
               
               <div className="flex gap-4 items-center">

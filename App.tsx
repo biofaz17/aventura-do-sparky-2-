@@ -5,8 +5,7 @@ import { LevelMap } from './screens/LevelMap';
 import { GameScreen } from './screens/GameScreen';
 import { Dashboard } from './screens/Dashboard';
 import { ParentPanel } from './screens/ParentPanel';
-import { CheckoutScreen } from './screens/CheckoutScreen';
-import { PaymentSuccessScreen } from './screens/PaymentSuccessScreen';
+// Telas de checkout interno removidas
 import { UserProfile, SubscriptionTier } from './types';
 import { LEVELS } from './constants';
 import { ParentGate } from './components/ParentGate';
@@ -14,6 +13,7 @@ import { SubscriptionModal } from './components/SubscriptionModal';
 import { MarketingModal } from './components/MarketingModal';
 import { Mail } from 'lucide-react';
 import SupabaseTest from './components/SupabaseTest';
+import { AdminPanel } from './screens/AdminPanel';
 
 // Enhanced Toast Notification
 const NotificationToast = ({ msg, subMsg, show }: { msg: string, subMsg?: string, show: boolean }) => (
@@ -36,8 +36,8 @@ enum Screen {
   MAP,
   GAME,
   PARENTS,
-  CHECKOUT,
-  PAYMENT_SUCCESS
+  ADMIN
+// Telas de checkout removidas (venda pela Hotmart)
 }
 
 export default function App() {
@@ -54,8 +54,7 @@ export default function App() {
   const [gateAction, setGateAction] = useState(''); // What triggered the gate?
   const [notification, setNotification] = useState({ title: '', body: '' });
 
-  // Payment Flow State
-  const [pendingSubscriptionTier, setPendingSubscriptionTier] = useState<SubscriptionTier | null>(null);
+  // O Flow de Pagamento foi movido para fora do app (Hotmart)
 
   // Helper function to show notifications
   const showNotification = (title: string, body: string) => {
@@ -73,29 +72,7 @@ export default function App() {
     }
   }, [user]);
 
-  // PAYMENT RETURN HANDLER (Mercado Pago Redirects)
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const status = params.get('collection_status') || params.get('status');
-
-    // Se voltamos do MP com sucesso
-    if (status === 'approved' && user) {
-      // Limpa URL
-      window.history.replaceState({}, document.title, window.location.pathname);
-
-      // Atualiza usuário
-      const updatedUser = {
-        ...user,
-        subscription: pendingSubscriptionTier || SubscriptionTier.PRO, // Default fallback if state lost
-        isGuest: false,
-      };
-      setUser(updatedUser);
-      setScreen(Screen.PAYMENT_SUCCESS);
-    } else if (status === 'failure' || status === 'null') {
-      window.history.replaceState({}, document.title, window.location.pathname);
-      alert("O pagamento não foi concluído ou foi cancelado.");
-    }
-  }, [user]); // Depende do user estar carregado (poderia precisar de logica melhor de re-hydrate se fosse reload real da pagina)
+  // Lógica de Retorno do Mercado Pago Removida
 
   const handleLogin = (profile: UserProfile) => {
     setUser(profile);
@@ -226,36 +203,12 @@ export default function App() {
     }
   };
 
-  // --- Payment Flow Logic ---
-  const handleCheckoutStart = (tier: SubscriptionTier) => {
-    setPendingSubscriptionTier(tier);
-    setShowSubscriptionModal(false);
-    setScreen(Screen.CHECKOUT);
-  };
-
-  // Callback manual (usado pelo modo demo fallback no checkout screen)
-  const handlePaymentComplete = () => {
-    if (user && pendingSubscriptionTier) {
-      // Update user: remove guest status if successful (assuming data collection in checkout handles implicit registration logic for this demo)
-      const updatedUser = {
-        ...user,
-        subscription: pendingSubscriptionTier,
-        isGuest: false,
-      };
-      setUser(updatedUser);
-      setScreen(Screen.PAYMENT_SUCCESS);
-    }
-  };
-
-  const handlePaymentCancel = () => {
-    setPendingSubscriptionTier(null);
-    setScreen(Screen.DASHBOARD);
-  };
+  // Payment Flow Logic Removida (Agora acontece na Hotmart)
 
   if (screen === Screen.AUTH) {
     return (
       <div className="h-full w-full scrollable-y bg-indigo-500">
-        <AuthScreen onLogin={handleLogin} />
+        <AuthScreen onLogin={handleLogin} onAdminAccess={() => setScreen(Screen.ADMIN)} />
       </div>
     );
   }
@@ -326,25 +279,13 @@ export default function App() {
         </div>
       )}
 
-      {/* Payment Screens */}
-      {screen === Screen.CHECKOUT && pendingSubscriptionTier && (
+      {screen === Screen.ADMIN && (
         <div className="h-full w-full scrollable-y">
-          <CheckoutScreen
-            user={user}
-            tier={pendingSubscriptionTier}
-            onConfirm={handlePaymentComplete}
-            onCancel={handlePaymentCancel}
-          />
+          <AdminPanel onBack={() => setScreen(Screen.AUTH)} />
         </div>
       )}
 
-      {screen === Screen.PAYMENT_SUCCESS && (
-        <div className="h-full w-full scrollable-y">
-          <PaymentSuccessScreen
-            onContinue={() => setScreen(Screen.DASHBOARD)}
-          />
-        </div>
-      )}
+      {/* Fluxo de Checkout Removido */}
 
       {/* Modals */}
       {showMarketingModal && (
@@ -364,7 +305,6 @@ export default function App() {
 
       {showSubscriptionModal && (
         <SubscriptionModal
-          onCheckoutStart={handleCheckoutStart}
           onClose={() => setShowSubscriptionModal(false)}
         />
       )}
