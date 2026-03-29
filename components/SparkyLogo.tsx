@@ -13,10 +13,10 @@ export const SparkyLogo: React.FC<SparkyLogoProps> = ({
   size = 'md'
 }) => {
   const sizeClasses = {
-    sm: "h-8",
-    md: "h-12",
-    lg: "h-20",
-    xl: "h-32"
+    sm: "h-8 w-8",
+    md: "h-12 w-12",
+    lg: "h-20 w-20",
+    xl: "h-32 w-32"
   };
 
   const textSizes = {
@@ -31,7 +31,7 @@ export const SparkyLogo: React.FC<SparkyLogoProps> = ({
       {/* Sparky Icon SVG */}
       <svg 
         viewBox="0 0 100 100" 
-        className={`${sizeClasses[size]} w-auto drop-shadow-md`}
+        className={`${sizeClasses[size]} drop-shadow-md`}
         fill="none" 
         xmlns="http://www.w3.org/2000/svg"
       >
