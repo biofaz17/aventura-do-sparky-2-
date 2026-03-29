@@ -57,15 +57,15 @@ export const ParentPanel: React.FC<ParentPanelProps> = ({
   const isFree = user.subscription === SubscriptionTier.FREE;
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col md:flex-row">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 to-slate-900 font-sans text-slate-100 flex flex-col md:flex-row">
       
       {/* Sidebar Navigation */}
-      <aside className="w-full md:w-64 bg-white border-r border-slate-200 flex-shrink-0 flex flex-col">
-        <div className="p-6 border-b border-slate-100 flex items-center gap-3">
-           <button onClick={onBack} className="bg-slate-100 p-2 rounded-lg hover:bg-slate-200 transition text-slate-600">
+      <aside className="w-full md:w-64 bg-slate-900/80 border-r border-cyan-500/20 flex-shrink-0 flex flex-col">
+        <div className="p-6 border-b border-cyan-500/20 flex items-center gap-3">
+           <button onClick={onBack} className="bg-slate-800/80 hover:bg-slate-700 p-2 rounded-lg transition text-cyan-400 border border-cyan-500/30">
              <ArrowLeft size={20} />
            </button>
-           <h1 className="font-heading text-xl text-indigo-900 leading-none">
+           <h1 className="font-heading text-xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-300 leading-none">
              Minha Conta
            </h1>
         </div>

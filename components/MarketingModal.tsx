@@ -50,44 +50,44 @@ export const MarketingModal: React.FC<MarketingModalProps> = ({ onUpgrade, onClo
   ];
 
   return (
-    <div className="fixed inset-0 z-[70] bg-indigo-900/95 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-fadeIn">
-      <div className="relative w-full max-w-3xl bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border-4 border-yellow-400">
+    <div className="fixed inset-0 z-[70] bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-fadeIn">
+      <div className="relative w-full max-w-3xl bg-gradient-to-b from-slate-900 to-slate-800 rounded-2xl shadow-2xl overflow-hidden border border-cyan-500/30">
         
         {/* Close Button */}
         <button 
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500 transition z-20"
+          className="absolute top-4 right-4 p-2 bg-slate-700/50 hover:bg-slate-600 rounded-full text-cyan-400 transition z-20"
         >
           <X size={24} />
         </button>
 
         {/* Header Visual */}
-        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-800 p-8 pt-10 text-center relative overflow-hidden">
+        <div className="bg-gradient-to-r from-cyan-600 via-violet-600 to-cyan-700 p-8 pt-10 text-center relative overflow-hidden">
            {/* Background Pattern */}
            <div className="absolute inset-0 opacity-10 bg-[url('/assets/patterns/cubes.png')]"></div>
            
            <div className="relative z-10">
-              <div className="inline-flex items-center gap-2 bg-yellow-400 text-yellow-900 px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest mb-6 shadow-lg transform -rotate-2">
+              <div className="inline-flex items-center gap-2 bg-cyan-400 text-slate-950 px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest mb-6 shadow-lg transform -rotate-2">
                 <Crown size={16} /> Oferta Exclusiva VIP
               </div>
               <h2 className="text-3xl md:text-5xl font-heading text-white mb-4 leading-tight drop-shadow-md">
                 Torne-se uma Lenda do Código!
               </h2>
-              <p className="text-indigo-100 font-bold text-lg md:text-xl max-w-xl mx-auto">
+              <p className="text-cyan-100 font-bold text-lg md:text-xl max-w-xl mx-auto">
                 Desbloqueie acesso imediato às 4 Skins Raras e jogue em Níveis Secretos que ninguém mais tem.
               </p>
            </div>
         </div>
 
         {/* Content Body */}
-        <div className="p-6 md:p-10 bg-slate-50">
+        <div className="p-6 md:p-10 bg-slate-800/50">
            
            {/* Skins Showcase Grid */}
            <div className="mb-8">
-              <h3 className="text-center text-slate-500 font-bold text-sm uppercase tracking-wider mb-6 flex items-center justify-center gap-2">
-                 <Star className="text-yellow-500 fill-yellow-500" size={16} /> 
+              <h3 className="text-center text-cyan-300 font-bold text-sm uppercase tracking-wider mb-6 flex items-center justify-center gap-2">
+                 <Star className="text-cyan-400 fill-cyan-400" size={16} /> 
                  Novos Personagens Disponíveis 
-                 <Star className="text-yellow-500 fill-yellow-500" size={16} />
+                 <Star className="text-cyan-400 fill-cyan-400" size={16} />
               </h3>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
