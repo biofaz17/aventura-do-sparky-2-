@@ -50,11 +50,27 @@ export default function App() {
   const [currentLevelId, setCurrentLevelId] = useState<number | string>(1);
   const [showParentGate, setShowParentGate] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
-  const [showMarketingModal, setShowMarketingModal] = useState(false); // New Marketing Modal State
-  const [gateAction, setGateAction] = useState(''); // What triggered the gate?
+  const [showMarketingModal, setShowMarketingModal] = useState(false);
+  const [gateAction, setGateAction] = useState('');
   const [notification, setNotification] = useState({ title: '', body: '' });
 
-  // O Flow de Pagamento foi movido para fora do app (Hotmart)
+  // Monitorar Mudanças na URL para o atalho oculto #/admin
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (window.location.hash === '#/admin') {
+        setScreen(Screen.ADMIN);
+      } else if (screen === Screen.ADMIN && window.location.hash !== '#/admin') {
+         // Auto-redireciona para o AuthScreen se removerem o #/admin
+         setScreen(Screen.AUTH);
+      }
+    };
+    
+    // Checar no primeiro carregamento
+    handleHashChange();
+    
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [screen]);
 
   // Helper function to show notifications
   const showNotification = (title: string, body: string) => {
