@@ -14,6 +14,7 @@ import { MarketingModal } from './components/MarketingModal';
 import { Mail } from 'lucide-react';
 import SupabaseTest from './components/SupabaseTest';
 import { AdminPanel } from './screens/AdminPanel';
+import { HomeScreen } from './screens/HomeScreen';
 
 // Enhanced Toast Notification
 const NotificationToast = ({ msg, subMsg, show }: { msg: string, subMsg?: string, show: boolean }) => (
@@ -31,6 +32,7 @@ const NotificationToast = ({ msg, subMsg, show }: { msg: string, subMsg?: string
 );
 
 enum Screen {
+  HOME,
   AUTH,
   DASHBOARD,
   MAP,
@@ -42,7 +44,7 @@ enum Screen {
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>(
-    window.location.hash === '#/admin' ? Screen.ADMIN : Screen.AUTH
+    window.location.hash === '#/admin' ? Screen.ADMIN : Screen.HOME
   );
 
   // User State
@@ -217,6 +219,14 @@ export default function App() {
   };
 
   // Payment Flow Logic Removida (Agora acontece na Hotmart)
+
+  if (screen === Screen.HOME) {
+    return (
+      <div className="h-full w-full">
+        <HomeScreen onStart={() => setScreen(Screen.AUTH)} />
+      </div>
+    );
+  }
 
   if (screen === Screen.AUTH) {
     return (
