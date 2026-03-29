@@ -226,12 +226,20 @@ export default function App() {
     );
   }
 
+  // Admin: acessível sem login (rota secreta /#/admin)
+  if (screen === Screen.ADMIN) {
+    return (
+      <div className="h-full w-full">
+        <AdminPanel onBack={() => { window.location.hash = ''; setScreen(Screen.AUTH); }} />
+      </div>
+    );
+  }
+
   // Ensure user exists for other screens
   if (!user) return null;
 
   return (
     <div className="antialiased text-slate-800 font-sans h-full w-full">
-      <SupabaseTest />
       <NotificationToast
         msg={notification.title || ''}
         subMsg={notification.body || ''}
@@ -292,11 +300,7 @@ export default function App() {
         </div>
       )}
 
-      {screen === Screen.ADMIN && (
-        <div className="h-full w-full scrollable-y">
-          <AdminPanel onBack={() => setScreen(Screen.AUTH)} />
-        </div>
-      )}
+      {/* Admin: tratado acima, antes do guard de usuario */}
 
       {/* Fluxo de Checkout Removido */}
 
