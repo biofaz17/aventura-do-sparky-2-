@@ -37,7 +37,7 @@ enum Screen {
   GAME,
   PARENTS,
   ADMIN
-// Telas de checkout removidas (venda pela Hotmart)
+  // Telas de checkout removidas (venda pela Hotmart)
 }
 
 export default function App() {
