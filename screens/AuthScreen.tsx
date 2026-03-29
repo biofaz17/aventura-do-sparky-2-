@@ -126,45 +126,49 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onAdminAccess }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex flex-col items-center justify-center p-4 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-900 flex flex-col items-center justify-center p-4 py-12 relative overflow-hidden">
+      {/* Subtle background pattern */}
+      <div className="absolute inset-0 opacity-5 pointer-events-none" 
+           style={{ backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)', backgroundSize: '50px 50px' }}>
+      </div>
       
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md relative z-10">
         {/* Logo Section */}
         <div className="mb-12 flex flex-col items-center justify-center">
             <div 
-              className="transform hover:scale-105 transition-transform duration-300 cursor-pointer mb-4"
+              className="transform hover:scale-110 transition-transform duration-300 cursor-pointer mb-4 drop-shadow-lg"
               onClick={handleLogoClick}
               title="A aventura começa aqui!"
             >
               <SparkyLogo size="lg" />
             </div>
-            <p className="text-center text-blue-600 font-bold text-sm tracking-widest uppercase">
+            <p className="text-center text-cyan-400 font-bold text-sm tracking-widest uppercase">
               Code Adventure
             </p>
         </div>
 
         {/* Card Principal */}
-        <div className="bg-white rounded-3xl p-8 md:p-12 shadow-lg border border-slate-200">
+        <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 md:p-12 shadow-2xl border border-cyan-500/30 backdrop-blur-xl">
           
-          <h1 className="text-3xl md:text-4xl font-black text-slate-800 text-center mb-2 uppercase tracking-tight">
+          <h1 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-300 text-center mb-2 uppercase tracking-tight">
             Login do Explorador
           </h1>
 
-          <p className="text-center text-slate-500 text-sm md:text-base mb-8 leading-relaxed">
+          <p className="text-center text-slate-300 text-sm md:text-base mb-8 leading-relaxed">
             Bem-vindo à maior jornada de programação! Entre com suas credenciais para continuar a aventura.
           </p>
 
           <form onSubmit={handleLogin} className="space-y-5">
             
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">Qual seu Nome de Explorador?</label>
+              <label className="block text-sm font-bold text-cyan-300 mb-2">Qual seu Nome de Explorador?</label>
               <div className="relative">
-                 <User className="absolute left-3.5 top-3.5 text-slate-400" size={18} />
+                 <User className="absolute left-3.5 top-3.5 text-cyan-400/60" size={18} />
                  <input 
                    type="text" 
                    value={name}
                    onChange={e => setName(e.target.value)}
-                   className="w-full bg-white border-2 border-slate-200 rounded-lg p-3 pl-11 font-medium text-slate-700 focus:border-blue-400 focus:outline-none transition"
+                   className="w-full bg-slate-800/50 border-2 border-cyan-500/30 rounded-lg p-3 pl-11 font-medium text-slate-100 focus:border-cyan-400 focus:outline-none focus:bg-slate-800/80 transition"
                    placeholder="Ex: Pedro123"
                    required
                    disabled={loading}
@@ -173,14 +177,14 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onAdminAccess }
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">Senha do Jogador</label>
+              <label className="block text-sm font-bold text-cyan-300 mb-2">Senha do Jogador</label>
               <div className="relative">
-                 <Lock className="absolute left-3.5 top-3.5 text-slate-400" size={18} />
+                 <Lock className="absolute left-3.5 top-3.5 text-cyan-400/60" size={18} />
                  <input 
                    type="password" 
                    value={password}
                    onChange={e => setPassword(e.target.value)}
-                   className="w-full bg-white border-2 border-slate-200 rounded-lg p-3 pl-11 font-medium text-slate-700 focus:border-blue-400 focus:outline-none transition"
+                   className="w-full bg-slate-800/50 border-2 border-cyan-500/30 rounded-lg p-3 pl-11 font-medium text-slate-100 focus:border-cyan-400 focus:outline-none focus:bg-slate-800/80 transition"
                    placeholder="Digite a senha liberada"
                    required
                    disabled={loading}
@@ -189,7 +193,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onAdminAccess }
             </div>
 
             {error && (
-                <div className="bg-red-50 text-red-600 text-sm font-bold p-3 rounded-lg border border-red-200 text-center">
+                <div className="bg-rose-900/30 text-rose-300 text-sm font-bold p-3 rounded-lg border border-rose-500/50 text-center">
                     {error}
                 </div>
             )}
@@ -205,23 +209,23 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onAdminAccess }
           </form>
 
           <div className="my-6 flex items-center gap-4">
-             <div className="h-px bg-slate-200 flex-1" />
-             <span className="text-slate-400 text-xs font-bold uppercase">OU</span>
-             <div className="h-px bg-slate-200 flex-1" />
+             <div className="h-px bg-cyan-500/20 flex-1" />
+             <span className="text-cyan-400/60 text-xs font-bold uppercase">OU</span>
+             <div className="h-px bg-cyan-500/20 flex-1" />
           </div>
 
           <button 
             onClick={handleGuestPlay}
-            className="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3 rounded-lg transition flex items-center justify-center gap-2 text-sm"
+            className="w-full bg-violet-600/30 hover:bg-violet-600/50 text-violet-200 font-bold py-3 rounded-lg transition border border-violet-500/50 flex items-center justify-center gap-2 text-sm"
             disabled={loading}
           >
-             <Gamepad2 size={18} /> JOGAR VERSÃO GRÁTIS
+             <Gamepad2 size={18} /> JOGAR VERSÃ O GRÁTIS
           </button>
 
-          <div className="flex gap-4 items-center justify-center mt-6 pt-4 border-t border-slate-200">
+          <div className="flex gap-4 items-center justify-center mt-6 pt-4 border-t border-cyan-500/20">
              <button 
                onClick={() => setShowAbout(true)}
-               className="text-slate-400 font-bold text-xs hover:text-blue-500 flex items-center gap-1 transition"
+               className="text-cyan-400/60 font-bold text-xs hover:text-cyan-400 flex items-center gap-1 transition"
              >
                 <Info size={14} /> Saiba Mais
              </button>
@@ -229,21 +233,21 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onAdminAccess }
         </div>
 
         {/* Footer - Simples */}
-        <footer className="mt-8 text-center text-xs text-slate-400 space-y-1">
+        <footer className="mt-8 text-center text-xs text-cyan-400/60 space-y-1">
           <div>© {currentYear} TekTok TI. | Prof. Fabio Gouvêa Cabral T.</div>
           <div className="flex items-center justify-center gap-3">
             <a 
               href="https://instagram.com/sparky.aventura" 
               target="_blank" 
               rel="noreferrer"
-              className="hover:text-pink-500 transition"
+              className="hover:text-cyan-400 transition"
             >
               @sparky.aventura
             </a>
             <span>•</span>
             <a 
               href="mailto:robotix28@gmail.com?subject=Contato%20Sparky%20App" 
-              className="hover:text-blue-500 transition"
+              className="hover:text-cyan-400 transition"
             >
               Suporte
             </a>
@@ -253,36 +257,36 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onAdminAccess }
 
       {/* About Modal */}
       {showAbout && (
-        <div className="fixed inset-0 z-[60] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
-           <div className="bg-white rounded-3xl p-8 max-w-lg w-full relative shadow-2xl border border-slate-200 max-h-[80vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+           <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 max-w-lg w-full relative shadow-2xl border border-cyan-500/30 max-h-[80vh] overflow-y-auto">
               <button 
                 onClick={() => setShowAbout(false)}
-                className="absolute top-4 right-4 p-2 bg-slate-100 rounded-full hover:bg-slate-200 text-slate-500 transition"
+                className="absolute top-4 right-4 p-2 bg-slate-700/50 rounded-full hover:bg-slate-600 text-cyan-400 transition"
               >
                  <X size={24} />
               </button>
 
-              <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                 <Sparkles className="text-yellow-400 fill-yellow-400" size={24} /> Sobre o Sparky
+              <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-cyan-300 mb-6 flex items-center gap-2">
+                 <Sparkles className="text-cyan-400" size={24} /> Sobre o Sparky
               </h2>
 
-              <div className="space-y-4 text-slate-600 leading-relaxed text-sm">
+              <div className="space-y-4 text-slate-300 leading-relaxed text-sm">
                  <div>
-                    <h3 className="font-bold text-slate-800 mb-1">Jogos Educacionais que Empolgam</h3>
+                    <h3 className="font-bold text-cyan-300 mb-1">Jogos Educacionais que Empolgam</h3>
                     <p>
                        Motive seus alunos e filhos com nossa coleção de desafios pedagógicos. Construímos habilidades em raciocínio lógico, sequenciamento e programação.
                     </p>
                  </div>
 
                  <div>
-                    <h3 className="font-bold text-slate-800 mb-1">Aprendizado Interativo</h3>
+                    <h3 className="font-bold text-cyan-300 mb-1">Aprendizado Interativo</h3>
                     <p>
                        Com nossa variedade de fases, seu filho se diverte enquanto desenvolve competências essenciais, preparando-o para o futuro digital.
                     </p>
                  </div>
 
-                 <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                    <p className="text-blue-800 text-xs font-bold uppercase mb-1">Nossa Missão</p>
+                 <div className="bg-violet-600/20 p-3 rounded-lg border border-violet-500/50">
+                    <p className="text-violet-300 text-xs font-bold uppercase mb-1">Nossa Missão</p>
                     <p>Aprender a programar deve ser tão natural e divertido quanto brincar de blocos.</p>
                  </div>
 
@@ -291,7 +295,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onAdminAccess }
                        href="https://instagram.com/sparky.aventura"
                        target="_blank" 
                        rel="noreferrer" 
-                       className="inline-flex items-center gap-2 text-pink-600 font-bold hover:underline text-sm"
+                       className="inline-flex items-center gap-2 text-cyan-400 font-bold hover:text-cyan-300 transition text-sm"
                      >
                         <Instagram size={16} /> Siga @sparky.aventura
                      </a>

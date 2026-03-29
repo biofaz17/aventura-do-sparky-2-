@@ -123,29 +123,29 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const percentage = Math.round((unlockedCount / totalCount) * 100);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-900/20 flex flex-col relative overflow-hidden">
       {/* Background Decor */}
-      <div className="absolute top-0 left-0 w-full h-80 bg-gradient-to-b from-indigo-600 to-indigo-800 -z-10 rounded-b-[4rem] shadow-2xl" />
+      <div className="absolute top-0 left-0 w-full h-80 bg-gradient-to-b from-cyan-600/40 to-violet-700/20 -z-10 rounded-b-[4rem] shadow-2xl" />
       
       {/* Header */}
-      <header className="p-6 flex flex-col md:flex-row justify-between items-center max-w-6xl mx-auto w-full gap-4 z-10">
+      <header className="p-6 flex flex-col md:flex-row justify-between items-center max-w-6xl mx-auto w-full gap-4 z-10\">
         
         {/* Brand Logo */}
-        <div className="bg-white px-6 py-2 rounded-full border-4 border-white shadow-xl transform hover:scale-105 transition cursor-pointer" onClick={() => alert("Você encontrou um segredo? (WIP)")}>
+        <div className="bg-slate-800/50 px-6 py-2 rounded-full border border-cyan-500/30 shadow-xl transform hover:scale-105 transition cursor-pointer" onClick={() => alert("Você encontrou um segredo? (WIP)")}>
            <SparkyLogo size="sm" showText={true} />
         </div>
 
         {/* User Stats Bar */}
-        <div className="flex gap-3 bg-indigo-900/40 backdrop-blur-md p-2 rounded-full pr-2 border border-white/10 shadow-lg">
-           <div className="bg-white px-5 py-2 rounded-full flex items-center gap-2 shadow-inner border-2 border-slate-100">
-              <Star className="text-yellow-500 fill-yellow-500 filter drop-shadow-sm" size={20} />
-              <span className="font-black text-slate-800 text-xl">{progress.stars}</span>
+        <div className="flex gap-3 bg-slate-900/40 backdrop-blur-md p-2 rounded-full pr-2 border border-cyan-500/20 shadow-lg\">
+           <div className="bg-gradient-to-r from-cyan-500/20 to-violet-500/20 px-5 py-2 rounded-full flex items-center gap-2 shadow-inner border border-cyan-500/30\">
+              <Star className="text-cyan-400 fill-cyan-400 filter drop-shadow-sm" size={20} />
+              <span className="font-black text-cyan-300 text-xl\">{progress.stars}</span>
            </div>
            
-           <div className="flex items-center gap-4 px-3 text-white">
-              <div className="text-right leading-tight hidden md:block">
-                  <div className="text-[10px] font-bold opacity-60 uppercase tracking-widest">Nível Atual</div>
-                  <div className="font-heading text-lg">{Math.ceil(progress.stars / 3) + 1}</div>
+           <div className="flex items-center gap-4 px-3 text-cyan-300\">
+              <div className="text-right leading-tight hidden md:block\">
+                  <div className="text-[10px] font-bold opacity-60 uppercase tracking-widest\">Nível Atual</div>
+                  <div className="font-heading text-lg\">{ Math.ceil(progress.stars / 3) + 1}</div>
               </div>
               <button 
                 onClick={onOpenParents}

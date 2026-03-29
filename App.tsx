@@ -220,9 +220,7 @@ export default function App() {
 
   if (screen === Screen.AUTH) {
     return (
-      <div className="h-full w-full scrollable-y bg-indigo-500">
-        <AuthScreen onLogin={handleLogin} onAdminAccess={() => setScreen(Screen.ADMIN)} />
-      </div>
+      <AuthScreen onLogin={handleLogin} onAdminAccess={() => setScreen(Screen.ADMIN)} />
     );
   }
 
