@@ -19,9 +19,9 @@ interface GameScreenProps {
 }
 
 // ... (Manter componentes TutorialDemo inalterados para economizar espaço no XML, eles não mudaram lógica)
-const MotionTutorialDemo: React.FC = () => { /* ...existing logic... */ return (<div className="p-4 bg-blue-50 rounded-xl text-center"><p className="font-bold text-blue-800">Use os blocos azuis para mover!</p></div>)};
-const ActionTutorialDemo: React.FC = () => { /* ...existing logic... */ return (<div className="p-4 bg-purple-50 rounded-xl text-center"><p className="font-bold text-purple-800">Use o bloco roxo para pintar!</p></div>)};
-const TutorialDemo: React.FC = () => { /* ...existing logic... */ return (<div className="p-4 bg-orange-50 rounded-xl text-center"><p className="font-bold text-orange-800">Repita ações para economizar blocos!</p></div>)};
+const MotionTutorialDemo: React.FC = () => { /* ...existing logic... */ return (<div className="p-4 bg-slate-800 rounded-xl text-center"><p className="font-bold text-cyan-400">Use os blocos azuis para mover!</p></div>)};
+const ActionTutorialDemo: React.FC = () => { /* ...existing logic... */ return (<div className="p-4 bg-slate-800 rounded-xl text-center"><p className="font-bold text-violet-400">Use o bloco roxo para pintar!</p></div>)};
+const TutorialDemo: React.FC = () => { /* ...existing logic... */ return (<div className="p-4 bg-slate-800 rounded-xl text-center"><p className="font-bold text-amber-400">Repita ações para economizar blocos!</p></div>)};
 
 // --- SKIN SELECTOR MODAL (Mantido igual) ---
 const SkinSelector: React.FC<{ 
@@ -38,10 +38,10 @@ const SkinSelector: React.FC<{
   ];
   return (
     <div className="fixed inset-0 z-[80] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-       <div className="bg-white rounded-[2rem] p-6 max-w-2xl w-full border-4 border-indigo-200 relative animate-popIn shadow-2xl">
-          <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-slate-100 rounded-full hover:bg-slate-200"><XCircle /></button>
+       <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-6 max-w-2xl w-full border border-violet-500/30 relative animate-popIn shadow-2xl">
+          <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-slate-700/50 rounded-full hover:bg-slate-600 text-violet-400"><XCircle /></button>
           <div className="text-center mb-6">
-             <h2 className="text-3xl font-heading text-indigo-900 mb-2 flex items-center justify-center gap-3"><Shirt className="text-indigo-500" size={32} /> Guarda-Roupa</h2>
+             <h2 className="text-3xl font-heading text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-violet-300 mb-2 flex items-center justify-center gap-3"><Shirt className="text-violet-400" size={32} /> Guarda-Roupa</h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
              {skins.map(skin => (
@@ -49,7 +49,7 @@ const SkinSelector: React.FC<{
                   key={skin.id}
                   disabled={skin.locked}
                   onClick={() => onSelect(skin.id)}
-                  className={`relative group rounded-2xl p-4 border-4 transition-all duration-200 flex flex-col items-center gap-3 ${currentSkin === skin.id ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200' : 'border-slate-100 bg-slate-50 hover:bg-white'} ${skin.locked ? 'opacity-80' : ''}`}
+                  className={`relative group rounded-2xl p-4 border-4 transition-all duration-200 flex flex-col items-center gap-3 ${currentSkin === skin.id ? 'border-violet-500 bg-violet-950/40 ring-2 ring-violet-400' : 'border-slate-700 bg-slate-800 hover:bg-slate-700'} ${skin.locked ? 'opacity-80' : ''}`}
                 >
                    <div className="w-16 h-16 relative">
                       <Robot x={0} y={0} cellSize={64} skinId={skin.id} direction="right" />
@@ -61,9 +61,9 @@ const SkinSelector: React.FC<{
              ))}
           </div>
           {userTier === SubscriptionTier.FREE && (
-             <div className="mt-6 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl p-4 flex items-center gap-4">
-                <div className="bg-yellow-100 p-3 rounded-full text-yellow-600"><Crown size={24} /></div>
-                <div><h4 className="font-bold text-yellow-900">Desbloqueie todas!</h4><p className="text-xs text-yellow-800">O plano Starter libera todas as skins.</p></div>
+             <div className="mt-6 bg-gradient-to-r from-violet-600/30 to-violet-700/20 border border-violet-500/50 rounded-xl p-4 flex items-center gap-4">
+                <div className="bg-violet-600/40 p-3 rounded-full text-violet-400"><Crown size={24} /></div>
+                <div><h4 className="font-bold text-violet-300">Desbloqueie todas!</h4><p className="text-xs text-violet-300/70">O plano Starter libera todas as skins.</p></div>
              </div>
           )}
           <div className="mt-6 flex justify-center"><Button onClick={onClose} variant="primary" size="md" className="min-w-[150px]">Pronto!</Button></div>

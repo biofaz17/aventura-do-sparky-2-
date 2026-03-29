@@ -59,14 +59,14 @@ export const LevelMap: React.FC<LevelMapProps> = ({
   const proLevels = LEVELS.filter(l => l.requiredSubscription === SubscriptionTier.PRO);
 
   const renderLevelGrid = (levels: LevelConfig[], title: string, tierColor: string, icon: React.ReactNode, locked: boolean) => (
-      <div className={`mb-12 w-full max-w-5xl ${locked ? 'opacity-80 grayscale-[0.5]' : ''}`}>
-          <div className={`flex items-center gap-3 mb-6 p-4 rounded-xl shadow-sm ${locked ? 'bg-slate-200' : 'bg-white/90 backdrop-blur-sm'}`}>
+      <div className={`mb-12 w-full max-w-5xl ${locked ? 'opacity-60 grayscale-[0.3]' : ''}`}>
+          <div className={`flex items-center gap-3 mb-6 p-4 rounded-xl shadow-sm ${locked ? 'bg-slate-800/50' : 'bg-slate-800/80 backdrop-blur-sm'}`}>
               <div className={`p-2 rounded-full text-white ${tierColor}`}>
                   {icon}
               </div>
               <div>
-                  <h3 className="text-xl md:text-2xl font-heading text-slate-800">{title}</h3>
-                  {locked && <span className="text-xs font-bold text-red-500 uppercase flex items-center gap-1"><Lock size={12}/> Bloqueado</span>}
+                  <h3 className="text-xl md:text-2xl font-heading text-slate-200">{title}</h3>
+                  {locked && <span className="text-xs font-bold text-red-400 uppercase flex items-center gap-1"><Lock size={12}/> Bloqueado</span>}
               </div>
           </div>
 

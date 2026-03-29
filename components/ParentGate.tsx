@@ -48,24 +48,24 @@ export const ParentGate: React.FC<ParentGateProps> = ({ onSuccess, onCancel, act
 
   return (
     <div className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl p-8 max-w-sm w-full relative border-4 border-slate-300">
-        <button onClick={onCancel} className="absolute top-4 right-4 text-slate-400 hover:text-red-500">
+      <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 max-w-sm w-full relative border border-cyan-500/30 shadow-2xl">
+        <button onClick={onCancel} className="absolute top-4 right-4 text-slate-500 hover:text-red-400 transition">
           <X size={24} />
         </button>
 
         <div className="flex flex-col items-center text-center">
-          <div className="bg-slate-100 p-4 rounded-full mb-4">
-             <ShieldCheck size={40} className="text-blue-600" />
+          <div className="bg-cyan-950/40 p-4 rounded-full mb-4 border border-cyan-500/30">
+             <ShieldCheck size={40} className="text-cyan-400" />
           </div>
           
-          <h3 className="font-heading text-xl text-slate-800 mb-2">Área Restrita</h3>
-          <p className="text-slate-500 text-sm mb-6">
-            Para {action}, peça para seus pais resolverem o desafio:
+          <h3 className="font-heading text-xl text-cyan-300 mb-2">Area Restrita</h3>
+          <p className="text-slate-400 text-sm mb-6">
+            Para {action}, peca para seus pais resolverem o desafio:
           </p>
 
           <form onSubmit={handleSubmit} className="w-full">
-            <div className="mb-4 bg-blue-50 p-4 rounded-xl border border-blue-100">
-              <span className="text-2xl font-black text-blue-900 tracking-wider">
+            <div className="mb-4 bg-cyan-950/40 p-4 rounded-xl border border-cyan-500/50">
+              <span className="text-2xl font-black text-cyan-300 tracking-wider">
                 {problem.q} = ?
               </span>
             </div>
@@ -75,11 +75,11 @@ export const ParentGate: React.FC<ParentGateProps> = ({ onSuccess, onCancel, act
               value={input}
               onChange={(e) => { setInput(e.target.value); setError(false); }}
               placeholder="Resposta"
-              className="w-full text-center text-xl p-3 border-2 border-slate-300 rounded-xl mb-4 focus:border-blue-500 outline-none font-bold"
+              className="w-full text-center text-xl p-3 border-2 border-slate-600 bg-slate-800/50 rounded-xl mb-4 focus:border-cyan-400 outline-none font-bold text-slate-200 focus:bg-slate-800/80 transition"
               autoFocus
             />
             
-            {error && <p className="text-red-500 text-xs font-bold mb-4">Ops! Tente novamente.</p>}
+            {error && <p className="text-red-400 text-xs font-bold mb-4">Ops! Tente novamente.</p>}
 
             <Button type="submit" variant="primary" className="w-full">
               Confirmar
