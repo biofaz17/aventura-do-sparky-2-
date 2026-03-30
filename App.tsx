@@ -237,7 +237,7 @@ export default function App() {
   if (!user) return null;
 
   return (
-    <div className="antialiased text-slate-800 font-sans h-full w-full">
+    <div className="antialiased text-slate-800 font-sans min-h-screen w-full bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-900">
       <NotificationToast
         msg={notification.title || ''}
         subMsg={notification.body || ''}
@@ -245,7 +245,7 @@ export default function App() {
       />
 
       {screen === Screen.DASHBOARD && (
-        <div className="h-full w-full scrollable-y">
+        <div className="min-h-screen w-full scrollable-y">
           <Dashboard
             progress={user.progress}
             onPlayMission={() => setScreen(Screen.MAP)}
@@ -259,7 +259,7 @@ export default function App() {
       )}
 
       {screen === Screen.MAP && (
-        <div className="h-full w-full scrollable-y">
+        <div className="min-h-screen w-full scrollable-y">
           <LevelMap
             unlockedLevels={user.progress.unlockedLevels}
             userSubscription={user.subscription}
@@ -284,7 +284,7 @@ export default function App() {
       )}
 
       {screen === Screen.PARENTS && (
-        <div className="h-full w-full scrollable-y">
+        <div className="min-h-screen w-full scrollable-y">
           <ParentPanel
             user={user}
             onUpdateUser={handleUpdateProfile}
