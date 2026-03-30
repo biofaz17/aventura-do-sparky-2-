@@ -27,11 +27,11 @@ export const SparkyLogo: React.FC<SparkyLogoProps> = ({
   };
 
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
+    <div className={`inline-flex items-center gap-3 ${className}`}>
       {/* Sparky Icon SVG */}
       <svg 
         viewBox="0 0 100 100" 
-        className={`${sizeClasses[size]} drop-shadow-md`}
+        className={`shrink-0 ${sizeClasses[size]} drop-shadow-md`}
         fill="none" 
         xmlns="http://www.w3.org/2000/svg"
       >
