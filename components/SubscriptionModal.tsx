@@ -5,21 +5,13 @@ import { SubscriptionTier } from '../types';
 import { PLANS } from '../constants';
 
 interface SubscriptionModalProps {
+  onCheckoutStart: (tier: SubscriptionTier) => void;
   onClose: () => void;
 }
 
-export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ onClose }) => {
+export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ onCheckoutStart, onClose }) => {
   const starter = PLANS[SubscriptionTier.STARTER];
   const pro = PLANS[SubscriptionTier.PRO];
-
-  const handleHotmartRedirect = (tier: SubscriptionTier) => {
-    // Substitua o link abaixo pelo link real do seu checkout na Hotmart
-    const hotmartUrl = tier === SubscriptionTier.PRO 
-      ? 'https://pay.hotmart.com/SEU_LINK_PRO'
-      : 'https://pay.hotmart.com/SEU_LINK_STARTER';
-      
-    window.location.href = hotmartUrl;
-  };
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
@@ -51,7 +43,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ onClose })
                   <li key={i} className="flex gap-2 items-start"><Check className="text-emerald-400 shrink-0 mt-0.5" size={16} /> {feature}</li>
                ))}
              </ul>
-             <Button variant="primary" onClick={() => handleHotmartRedirect(SubscriptionTier.STARTER)} size="md" className="w-full mt-auto">
+             <Button variant="primary" onClick={() => onCheckoutStart(SubscriptionTier.STARTER)} size="md" className="w-full mt-auto">
                Comprar Agora
              </Button>
           </div>
@@ -70,7 +62,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ onClose })
                   <li key={i} className="flex gap-2 items-start"><Check className="text-emerald-400 shrink-0 mt-0.5" size={16} /> {feature}</li>
                ))}
              </ul>
-             <Button variant="success" onClick={() => handleHotmartRedirect(SubscriptionTier.PRO)} size="md" className="w-full mt-auto">
+             <Button variant="success" onClick={() => onCheckoutStart(SubscriptionTier.PRO)} size="md" className="w-full mt-auto">
                Comprar Agora
              </Button>
           </div>

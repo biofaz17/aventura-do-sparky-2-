@@ -5,7 +5,9 @@ import { LevelMap } from './screens/LevelMap';
 import { GameScreen } from './screens/GameScreen';
 import { Dashboard } from './screens/Dashboard';
 import { ParentPanel } from './screens/ParentPanel';
-// Telas de checkout interno removidas
+import { CheckoutScreen } from './screens/CheckoutScreen';
+import { PaymentSuccessScreen } from './screens/PaymentSuccessScreen';
+// Telas de checkout interno restauradas
 import { UserProfile, SubscriptionTier } from './types';
 import { LEVELS } from './constants';
 import { ParentGate } from './components/ParentGate';
@@ -14,6 +16,7 @@ import { MarketingModal } from './components/MarketingModal';
 import { Mail } from 'lucide-react';
 import SupabaseTest from './components/SupabaseTest';
 import { AdminPanel } from './screens/AdminPanel';
+import { HomeScreen } from './screens/HomeScreen';
 
 // Enhanced Toast Notification
 const NotificationToast = ({ msg, subMsg, show }: { msg: string, subMsg?: string, show: boolean }) => (
@@ -31,18 +34,20 @@ const NotificationToast = ({ msg, subMsg, show }: { msg: string, subMsg?: string
 );
 
 enum Screen {
+  HOME,
   AUTH,
   DASHBOARD,
   MAP,
   GAME,
   PARENTS,
-  ADMIN
-// Telas de checkout removidas (venda pela Hotmart)
+  ADMIN,
+  CHECKOUT,
+  PAYMENT_SUCCESS
 }
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>(
-    window.location.hash === '#/admin' ? Screen.ADMIN : Screen.AUTH
+    window.location.hash === '#/admin' ? Screen.ADMIN : Screen.HOME
   );
 
   // User State
@@ -55,6 +60,9 @@ export default function App() {
   const [showMarketingModal, setShowMarketingModal] = useState(false); // New Marketing Modal State
   const [gateAction, setGateAction] = useState(''); // What triggered the gate?
   const [notification, setNotification] = useState({ title: '', body: '' });
+  
+  // Payment Flow State
+  const [pendingSubscriptionTier, setPendingSubscriptionTier] = useState<SubscriptionTier | null>(null);
 
   // Listener de URL Hash para acesso direto ao painel admin via /#/admin
   useEffect(() => {
@@ -86,6 +94,30 @@ export default function App() {
   }, [user]);
 
   // Lógica de Retorno do Mercado Pago Removida
+
+  // PAYMENT RETURN HANDLER (Mercado Pago Redirects)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('collection_status') || params.get('status');
+
+    // Se voltamos do MP com sucesso
+    if (status === 'approved' && user) {
+      // Limpa URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      // Atualiza usuário
+      const updatedUser = {
+        ...user,
+        subscription: pendingSubscriptionTier || SubscriptionTier.PRO, // Default fallback
+        isGuest: false,
+      };
+      setUser(updatedUser);
+      setScreen(Screen.PAYMENT_SUCCESS);
+    } else if (status === 'failure' || (status === 'null' && window.location.search.includes('status'))) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+      alert("O pagamento não foi concluído ou foi cancelado.");
+    }
+  }, [user]);
 
   const handleLogin = (profile: UserProfile) => {
     setUser(profile);
@@ -216,7 +248,39 @@ export default function App() {
     }
   };
 
-  // Payment Flow Logic Removida (Agora acontece na Hotmart)
+  // --- Payment Flow Logic ---
+  const handleCheckoutStart = (tier: SubscriptionTier) => {
+    setPendingSubscriptionTier(tier);
+    setShowSubscriptionModal(false);
+    setScreen(Screen.CHECKOUT);
+  };
+
+  const handlePaymentComplete = () => {
+    if (user && pendingSubscriptionTier) {
+       const updatedUser = { 
+           ...user, 
+           subscription: pendingSubscriptionTier,
+           isGuest: false,
+       };
+       setUser(updatedUser);
+       setScreen(Screen.PAYMENT_SUCCESS);
+    }
+  };
+
+  const handlePaymentCancel = () => {
+    setPendingSubscriptionTier(null);
+    setScreen(Screen.DASHBOARD);
+  };
+
+  // Payment Flow Logic Restaurada
+
+  if (screen === Screen.HOME) {
+    return (
+      <div className="h-full w-full">
+        <HomeScreen onStart={() => setScreen(Screen.AUTH)} />
+      </div>
+    );
+  }
 
   if (screen === Screen.AUTH) {
     return (
@@ -320,8 +384,29 @@ export default function App() {
 
       {showSubscriptionModal && (
         <SubscriptionModal
+          onCheckoutStart={handleCheckoutStart}
           onClose={() => setShowSubscriptionModal(false)}
         />
+      )}
+
+      {/* Payment Screens */}
+      {screen === Screen.CHECKOUT && pendingSubscriptionTier && (
+         <div className="h-full w-full scrollable-y">
+            <CheckoutScreen 
+                user={user}
+                tier={pendingSubscriptionTier}
+                onConfirm={handlePaymentComplete}
+                onCancel={handlePaymentCancel}
+            />
+         </div>
+      )}
+
+      {screen === Screen.PAYMENT_SUCCESS && (
+         <div className="h-full w-full scrollable-y">
+            <PaymentSuccessScreen 
+                onContinue={() => setScreen(Screen.DASHBOARD)}
+            />
+         </div>
       )}
     </div>
   );
