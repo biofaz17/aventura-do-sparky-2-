@@ -32,8 +32,8 @@ export const PLANS = {
   [SubscriptionTier.STARTER]: {
     id: SubscriptionTier.STARTER,
     title: "Starter",
-    price: 19.99,
-    priceLabel: "19,99",
+    price: 29.99,
+    priceLabel: "29,99",
     features: [
       "Mundo da Floresta (+15 Níveis)",
       "Desafios de Padrões e Pintura",
@@ -44,8 +44,8 @@ export const PLANS = {
   [SubscriptionTier.PRO]: {
     id: SubscriptionTier.PRO,
     title: "Pro",
-    price: 49.99,
-    priceLabel: "49,99",
+    price: 67.99,
+    priceLabel: "67,99",
     features: [
       "Mundo Hacker (+30 Níveis Totais)",
       "Modo Criativo Ilimitado",
