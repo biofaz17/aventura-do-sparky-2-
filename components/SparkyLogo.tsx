@@ -14,16 +14,16 @@ export const SparkyLogo: React.FC<SparkyLogoProps> = ({
 }) => {
   const sizeClasses = {
     sm: "h-8 w-8",
-    md: "h-12 w-12",
-    lg: "h-20 w-20",
-    xl: "h-32 w-32"
+    md: "h-10 w-10",
+    lg: "h-14 w-14",
+    xl: "h-20 w-20"
   };
 
   const textSizes = {
-    sm: "text-xl",
-    md: "text-3xl",
-    lg: "text-5xl",
-    xl: "text-7xl"
+    sm: "text-lg",
+    md: "text-2xl",
+    lg: "text-3xl",
+    xl: "text-4xl"
   };
 
   return (
