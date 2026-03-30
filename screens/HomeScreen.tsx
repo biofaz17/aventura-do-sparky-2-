@@ -13,7 +13,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onStart }) => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-cyan-900/30 to-violet-900/40 flex flex-col items-center justify-center p-4 text-center relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-blue-300 via-purple-300 to-pink-300 flex flex-col items-center justify-center p-4 text-center relative overflow-hidden">
       
       {/* Background Patterns */}
       <div className="absolute inset-0 opacity-5 pointer-events-none" 

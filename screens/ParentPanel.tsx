@@ -57,7 +57,7 @@ export const ParentPanel: React.FC<ParentPanelProps> = ({
   const isFree = user.subscription === SubscriptionTier.FREE;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 to-slate-900 font-sans text-slate-100 flex flex-col md:flex-row">
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 font-sans text-gray-800 flex flex-col md:flex-row">
       
       {/* Sidebar Navigation */}
       <aside className="w-full md:w-64 bg-slate-900/80 border-r border-cyan-500/20 flex-shrink-0 flex flex-col">

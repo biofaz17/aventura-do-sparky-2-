@@ -12,18 +12,18 @@ export const Button: React.FC<ButtonProps> = ({
   className = '', 
   ...props 
 }) => {
-  const baseStyles = "font-heading font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed";
+  const baseStyles = "font-heading font-black rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-2xl";
   
   const variants = {
-    primary: "bg-gradient-to-r from-cyan-500 to-cyan-600 text-white hover:from-cyan-600 hover:to-cyan-700 border border-cyan-600 shadow-lg hover:shadow-xl",
-    secondary: "bg-gradient-to-r from-violet-600 to-violet-700 text-white hover:from-violet-700 hover:to-violet-800 border border-violet-700 shadow-lg hover:shadow-xl",
-    danger: "bg-gradient-to-r from-rose-500 to-rose-600 text-white hover:from-rose-600 hover:to-rose-700 border border-rose-600 shadow-lg hover:shadow-xl",
-    success: "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700 border border-emerald-600 shadow-lg hover:shadow-xl",
+    primary: "bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 border-0",
+    secondary: "bg-gradient-to-r from-green-400 to-emerald-500 text-white hover:from-green-500 hover:to-emerald-600 border-0",
+    danger: "bg-gradient-to-r from-red-500 to-orange-500 text-white hover:from-red-600 hover:to-orange-600 border-0",
+    success: "bg-gradient-to-r from-emerald-400 to-green-500 text-white hover:from-emerald-500 hover:to-green-600 border-0",
   };
 
   const sizes = {
-    sm: "px-4 py-2 text-sm",
-    md: "px-6 py-3 text-base",
+    sm: "px-5 py-2 text-sm",
+    md: "px-7 py-3 text-base",
     lg: "px-8 py-4 text-lg w-full sm:w-auto",
   };
 

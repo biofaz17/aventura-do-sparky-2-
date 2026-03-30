@@ -237,7 +237,7 @@ export default function App() {
   if (!user) return null;
 
   return (
-    <div className="antialiased text-slate-800 font-sans min-h-screen w-full bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-900">
+    <div className="antialiased text-gray-800 font-sans min-h-screen w-full bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
       <NotificationToast
         msg={notification.title || ''}
         subMsg={notification.body || ''}

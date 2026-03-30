@@ -123,7 +123,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const percentage = Math.round((unlockedCount / totalCount) * 100);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-900/20 flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 flex flex-col relative overflow-hidden">
       {/* Background Decor */}
       <div className="absolute top-0 left-0 w-full h-80 bg-gradient-to-b from-cyan-600/40 to-violet-700/20 -z-10 rounded-b-[4rem] shadow-2xl" />
       
