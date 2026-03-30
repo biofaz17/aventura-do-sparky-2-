@@ -1,92 +1,122 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    
-    <title>Aventura de Código do Sparky</title>
-    
-    <!-- Favicon (Rosto do Sparky) -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 5 L50 25' stroke='%23FBBF24' stroke-width='5' stroke-linecap='round' /%3E%3Crect x='15' y='25' width='70' height='60' rx='15' fill='%231D4ED8' stroke='%231E3A8A' stroke-width='3' /%3E%3Ccircle cx='10' cy='55' r='6' fill='%23FBBF24' /%3E%3Ccircle cx='90' cy='55' r='6' fill='%23FBBF24' /%3E%3Crect x='25' y='35' width='50' height='40' rx='10' fill='%23FFFFFF' /%3E%3Ccircle cx='40' cy='50' r='5' fill='%231E3A8A' /%3E%3Ccircle cx='60' cy='50' r='5' fill='%231E3A8A' /%3E%3C/svg%3E">
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
-    
-    <style>
-      body, html, #root {
-        height: 100%;
-        width: 100%;
-        margin: 0;
-        padding: 0;
-        overflow: hidden; /* Trava o scroll da página */
-        position: fixed; /* Fixa o corpo para evitar bounce no iOS */
-        inset: 0;
-      }
-      /* Ensure the app content renders above the subtle pattern overlay */
-      #root { position: relative; z-index: 1; }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 
-      /* Local background pattern (copied from remote bundle) */
-      body::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background-image: url('/assets/patterns/stardust.png');
-        background-repeat: repeat;
-        opacity: 0.06;
-        pointer-events: none;
-        z-index: 0;
-      }
-      body {
-        font-family: 'Nunito', sans-serif;
-        background-color: #f0f9ff;
-        user-select: none;
-        -webkit-user-select: none;
-        overscroll-behavior: none;
-        touch-action: none; /* Desabilita toques padrão globais, reabilita em containers específicos */
-      }
-      /* Habilita scroll e toque onde necessário */
-      .scrollable-y {
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        touch-action: pan-y;
-      }
-      .scrollable-x {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        touch-action: pan-x;
-      }
-      /* Elementos clicáveis */
-      button, a, input {
-        touch-action: manipulation;
-      }
-      
-      h1, h2, h3, .font-heading {
-        font-family: 'Fredoka One', cursive;
-      }
-      .no-scrollbar::-webkit-scrollbar {
-        display: none;
-      }
-      .no-scrollbar {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-      }
-      @keyframes float {
-        0% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
-        100% { transform: translateY(0px); }
-      }
-      .animate-float {
-        animation: float 3s ease-in-out infinite;
-      }
-    </style>
+  <title>Aventura de Código do Sparky</title>
 
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-  </body>
+  <!-- Favicon (Rosto do Sparky) -->
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 5 L50 25' stroke='%23FBBF24' stroke-width='5' stroke-linecap='round' /%3E%3Crect x='15' y='25' width='70' height='60' rx='15' fill='%231D4ED8' stroke='%231E3A8A' stroke-width='3' /%3E%3Ccircle cx='10' cy='55' r='6' fill='%23FBBF24' /%3E%3Ccircle cx='90' cy='55' r='6' fill='%23FBBF24' /%3E%3Crect x='25' y='35' width='50' height='40' rx='10' fill='%23FFFFFF' /%3E%3Ccircle cx='40' cy='50' r='5' fill='%231E3A8A' /%3E%3Ccircle cx='60' cy='50' r='5' fill='%231E3A8A' /%3E%3C/svg%3E">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap"
+    rel="stylesheet">
+
+  <style>
+    html,
+    body,
+    #root {
+      min-height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      position: relative;
+      overflow-x: hidden;
+      font-family: 'Nunito', sans-serif;
+      background-color: #f0f9ff;
+      user-select: none;
+      -webkit-user-select: none;
+      overscroll-behavior: none;
+    }
+
+    #root {
+      position: relative;
+      min-height: 100vh;
+      z-index: 1;
+    }
+
+    /* Ensure the app content renders above the subtle pattern overlay */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: url('/assets/patterns/stardust.png');
+      background-repeat: repeat;
+      opacity: 0.06;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Habilita scroll e toque onde necessário */
+    .scrollable-y {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+    }
+
+    .scrollable-x {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-x;
+    }
+
+    /* Elementos clicáveis */
+    button,
+    a,
+    input {
+      touch-action: manipulation;
+    }
+
+    h1,
+    h2,
+    h3,
+    .font-heading {
+      font-family: 'Fredoka One', cursive;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(0px);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+
+      100% {
+        transform: translateY(0px);
+      }
+    }
+
+    .animate-float {
+      animation: float 3s ease-in-out infinite;
+    }
+  </style>
+
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
 </html>
