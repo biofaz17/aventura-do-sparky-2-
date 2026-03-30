@@ -18,6 +18,13 @@ export const SparkyLogo: React.FC<SparkyLogoProps> = ({
     xl: "h-20 w-20"
   };
 
+  const sizeMap = {
+    sm: '32px',
+    md: '40px',
+    lg: '56px',
+    xl: '80px',
+  };
+
   const textSizes = {
     sm: "text-lg",
     md: "text-2xl",
@@ -30,7 +37,8 @@ export const SparkyLogo: React.FC<SparkyLogoProps> = ({
       {/* Sparky Icon SVG */}
       <svg 
         viewBox="0 0 100 100" 
-        className={`shrink-0 ${sizeClasses[size]} drop-shadow-md`}
+        className={`${sizeClasses[size]} drop-shadow-md shrink-0 block`}
+        style={{ height: sizeMap[size], width: sizeMap[size], minWidth: sizeMap[size], minHeight: sizeMap[size] }}
         fill="none" 
         xmlns="http://www.w3.org/2000/svg"
       >
