@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Play, RotateCcw, Trash2, HelpCircle, Pause, CheckCircle, XCircle, ArrowRight, Repeat, Code, Terminal, Move, Clock, Battery, BatteryWarning, Target, Brush, Volume2, VolumeX, Shirt, Lock, Crown, Waves, ChevronDown, Maximize2, Minimize2 } from 'lucide-react';
+import { ArrowLeft, Play, RotateCcw, Trash2, HelpCircle, Pause, CheckCircle, XCircle, ArrowRight, Repeat, Code, Terminal, Move, Clock, Battery, BatteryWarning, Target, Brush, Volume2, VolumeX, Shirt, Lock, Crown, Waves, ChevronDown, Maximize2, Minimize2, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LevelConfig, BlockType, BlockCategory, GridPosition, BLOCK_DEFINITIONS, UserProfile, SubscriptionTier } from '../types';
 import { LEVELS, CREATIVE_LEVEL } from '../constants';
@@ -347,10 +347,75 @@ export const GameScreen: React.FC<GameScreenProps> = ({ levelId, onBack, onNextL
   const bgClass = isHackerMode ? 'bg-slate-900' : 'bg-slate-50';
   const textClass = isHackerMode ? 'text-green-400 font-mono' : 'text-slate-800 font-sans';
 
+  const [showLevel16Special, setShowLevel16Special] = useState(false);
+
+  useEffect(() => {
+    if (gameStatus === 'won' && level.id === 16 && user?.subscription === SubscriptionTier.FREE) {
+       setTimeout(() => setShowLevel16Special(true), 1500);
+    }
+  }, [gameStatus, level.id, user?.subscription]);
+
   // --- RENDER ---
   return (
     <div className={`fixed inset-0 flex flex-col md:flex-row w-full h-full overflow-hidden ${bgClass} ${textClass}`}>
       
+      {/* Level 16 Special Nudge */}
+      <AnimatePresence>
+        {showLevel16Special && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-slate-900/90 backdrop-blur-xl flex items-center justify-center p-6 text-center"
+          >
+             <motion.div 
+               initial={{ scale: 0.9, y: 20 }}
+               animate={{ scale: 1, y: 0 }}
+               className="max-w-md w-full bg-white rounded-[3rem] p-10 shadow-2xl relative overflow-hidden ring-8 ring-green-400/20"
+             >
+                <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-green-400 via-cyan-400 to-blue-500"></div>
+                
+                <div className="w-24 h-24 mx-auto mb-6">
+                    <Robot x={0} y={0} cellSize={96} direction="right" isHappy={true} isTalking={true} />
+                </div>
+
+                <h2 className="text-3xl font-heading text-slate-800 mb-4">Você é Incrível! 🌟</h2>
+                <p className="text-slate-500 font-bold leading-relaxed mb-8">
+                  Você completou o Mundo Inicial! Mas espere... tem algo brilhando na <span className="text-cyan-600">Floresta de Cores</span>. sparky já está pronto para ir, quer acompanhá-lo?
+                </p>
+
+                <div className="flex flex-col gap-3">
+                    <Button 
+                      variant="primary" 
+                      onClick={() => {
+                        setShowLevel16Special(false);
+                        onNextLevel(program.length);
+                      }} 
+                      size="lg"
+                      className="rounded-2xl py-4 bg-cyan-500 text-white border-0 shadow-lg shadow-cyan-500/30"
+                    >
+                        Ver Próximo Mundo! <ArrowRight size={20} className="ml-2" />
+                    </Button>
+                    <button 
+                      onClick={() => setShowLevel16Special(false)}
+                      className="text-slate-400 text-xs font-bold uppercase tracking-widest py-2"
+                    >
+                      Depois eu vejo
+                    </button>
+                </div>
+
+                <div className="mt-8 pt-8 border-t border-slate-100 grid grid-cols-2 gap-4">
+                    <div className="flex items-center gap-2 text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                        <Star size={14} className="text-yellow-400" fill="currentColor" /> +15 Novos Níveis
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                        <Brush size={14} className="text-violet-400" fill="currentColor" /> Novos Blocos
+                    </div>
+                </div>
+             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* HEADER CONTROLS (Floating on Mobile / Sidebar on Desktop) */}
       
       {/* ÁREA 1: PREVIEW (PALCO) - Altura Dinâmica no Mobile */}
