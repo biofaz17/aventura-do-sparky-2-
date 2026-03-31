@@ -110,7 +110,9 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({ user, tier, onCo
     
     try {
       // SECURITY: Input Sanitization before sending payload
-      const safeEmail = sanitizeInput(payerEmail);
+      const safeEmail = sanitizeInput(payerEmail).trim();
+      const safeName = payerName.trim();
+      const safeDoc = payerDoc.trim();
 
       const { data: { session } } = await supabase.auth.getSession();
       
