@@ -168,16 +168,11 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({ user, tier, onCo
       const isCors = error.message.includes('Failed to fetch') || error.name === 'TypeError';
       
       if (isCors) {
-          // MODO DE COMPATIBILIDADE (FALLBACK PARA DEMO SEM BACKEND)
-          // Isso é apenas para a demonstração funcionar no navegador sem servidor proxy.
-          setErrorMessage('Modo Simulação: Redirecionamento bloqueado pelo navegador (CORS).');
-          setTimeout(() => {
-              onConfirm();
-          }, 2000);
+          setErrorMessage('Falha na comunicação direta. Por favor, verifique sua conexão ou tente novamente em instantes.');
       } else {
           setErrorMessage(error.message || 'Falha na conexão.');
-          setStatus('error');
       }
+      setStatus('error');
     }
   };
 
@@ -193,8 +188,8 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({ user, tier, onCo
          <p className="text-slate-500 text-sm max-w-xs text-center">Você será redirecionado para um ambiente seguro.</p>
          
          {errorMessage && (
-             <p className="mt-4 text-xs text-green-600 font-bold bg-green-50 p-2 rounded">
-                 {errorMessage} <br/> Ativando plano automaticamente...
+             <p className="mt-4 text-xs text-red-600 font-bold bg-red-50 p-2 rounded max-w-xs text-center border border-red-100">
+                 {errorMessage}
              </p>
          )}
       </div>

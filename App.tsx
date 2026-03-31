@@ -9,11 +9,11 @@ import { CheckoutScreen } from './screens/CheckoutScreen';
 import { PaymentSuccessScreen } from './screens/PaymentSuccessScreen';
 // Telas de checkout interno restauradas
 import { UserProfile, SubscriptionTier } from './types';
-import { LEVELS } from './constants';
+import { LEVELS, MERCADO_PAGO_CONFIG } from './constants';
 import { ParentGate } from './components/ParentGate';
 import { SubscriptionModal } from './components/SubscriptionModal';
 import { MarketingModal } from './components/MarketingModal';
-import { Mail } from 'lucide-react';
+import { Mail, Loader2, ShieldCheck, AlertCircle } from 'lucide-react';
 import SupabaseTest from './components/SupabaseTest';
 import { AdminPanel } from './screens/AdminPanel';
 import { HomeScreen } from './screens/HomeScreen';
@@ -42,7 +42,8 @@ enum Screen {
   PARENTS,
   ADMIN,
   CHECKOUT,
-  PAYMENT_SUCCESS
+  PAYMENT_SUCCESS,
+  VERIFYING
 }
 
 export default function App() {
@@ -98,26 +99,55 @@ export default function App() {
   // PAYMENT RETURN HANDLER (Mercado Pago Redirects)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const paymentId = params.get('payment_id') || params.get('collection_id');
     const status = params.get('collection_status') || params.get('status');
 
-    // Se voltamos do MP com sucesso
-    if (status === 'approved' && user) {
-      // Limpa URL
-      window.history.replaceState({}, document.title, window.location.pathname);
-
-      // Atualiza usuário
-      const updatedUser = {
-        ...user,
-        subscription: pendingSubscriptionTier || SubscriptionTier.PRO, // Default fallback
-        isGuest: false,
-      };
-      setUser(updatedUser);
-      setScreen(Screen.PAYMENT_SUCCESS);
-    } else if (status === 'failure' || (status === 'null' && window.location.search.includes('status'))) {
-      window.history.replaceState({}, document.title, window.location.pathname);
-      alert("O pagamento não foi concluído ou foi cancelado.");
+    // Se voltamos do MP, precisamos verificar se o pagamento é real
+    if (paymentId && user && screen !== Screen.VERIFYING && screen !== Screen.PAYMENT_SUCCESS) {
+        verifyPayment(paymentId);
+    } else if ((status === 'failure' || status === 'null') && window.location.search.includes('status')) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+        showNotification("Pagamento não concluído", "Tente novamente ou escolha outro método.");
     }
   }, [user]);
+
+  const verifyPayment = async (paymentId: string) => {
+      setScreen(Screen.VERIFYING);
+      
+      try {
+          // Chamada real para a API do Mercado Pago (Seguro)
+          const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+              headers: {
+                  'Authorization': `Bearer ${MERCADO_PAGO_CONFIG.ACCESS_TOKEN}`
+              }
+          });
+
+          const data = await response.json();
+
+          // Limpa a URL apenas após a tentativa de verificação
+          window.history.replaceState({}, document.title, window.location.pathname);
+
+          if (data.status === 'approved') {
+              const updatedUser = {
+                  ...user!,
+                  subscription: pendingSubscriptionTier || SubscriptionTier.PRO,
+                  isGuest: false,
+              };
+              setUser(updatedUser);
+              setScreen(Screen.PAYMENT_SUCCESS);
+          } else if (data.status === 'pending' || data.status === 'in_process') {
+              setScreen(Screen.DASHBOARD);
+              showNotification("Pagamento Pendente", "Seu acesso será liberado assim que o pagamento for confirmado.");
+          } else {
+              setScreen(Screen.DASHBOARD);
+              alert("O pagamento não foi aprovado pela operadora.");
+          }
+      } catch (error) {
+          console.error("Erro na verificação de pagamento:", error);
+          setScreen(Screen.DASHBOARD);
+          alert("Erro técnico ao verificar pagamento. Se você pagou, entre em contato com o suporte.");
+      }
+  };
 
   const handleLogin = (profile: UserProfile) => {
     setUser(profile);
@@ -406,6 +436,27 @@ export default function App() {
             <PaymentSuccessScreen 
                 onContinue={() => setScreen(Screen.DASHBOARD)}
             />
+         </div>
+      )}
+
+      {screen === Screen.VERIFYING && (
+         <div className="fixed inset-0 z-[200] bg-white flex flex-col items-center justify-center p-6 text-center">
+             <div className="relative mb-8">
+                 <div className="absolute inset-0 animate-ping bg-blue-100 rounded-full"></div>
+                 <div className="relative bg-white p-4 rounded-full shadow-lg border-2 border-blue-100 italic">
+                    <Loader2 size={64} className="text-blue-500 animate-spin" />
+                 </div>
+             </div>
+             
+             <div className="max-w-xs space-y-4">
+                 <h2 className="text-2xl font-black text-slate-800 tracking-tight">Validando Pagamento</h2>
+                 <p className="text-slate-500 font-medium">Estamos confirmando os dados com o Mercado Pago. Isso leva apenas alguns segundos...</p>
+                 
+                 <div className="flex items-center justify-center gap-2 text-blue-600 bg-blue-50 py-2 px-4 rounded-full text-sm font-bold border border-blue-100">
+                    <ShieldCheck size={18} />
+                    <span>Conexão Segura</span>
+                 </div>
+             </div>
          </div>
       )}
     </div>
