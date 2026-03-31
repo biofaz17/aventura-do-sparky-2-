@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SubscriptionTier, UserProfile } from '../types';
-import { MERCADO_PAGO_CONFIG, PLANS } from '../constants';
+import { PLANS } from '../constants';
 import { ArrowLeft, Loader2, Lock, CheckCircle, Store, AlertTriangle, User, Mail, FileText, ArrowRight, ShieldCheck, Building2 } from 'lucide-react';
 
 interface CheckoutScreenProps {
@@ -109,57 +109,30 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({ user, tier, onCo
     
     try {
       // SECURITY: Input Sanitization before sending payload
-      const safeName = sanitizeInput(payerName);
       const safeEmail = sanitizeInput(payerEmail);
-      const safeDoc = payerDoc.replace(/\D/g, ''); // Numeric only for CPF
 
-      const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
+      const response = await fetch('https://aluzklqouexuruppwumz.supabase.co/functions/v1/create_preference', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${MERCADO_PAGO_CONFIG.ACCESS_TOKEN}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          items: [
-            {
-              id: tier,
-              title: `Sparky App - Plano ${plan.title} (Vitalício)`,
-              description: `Acesso completo e vitalício ao conteúdo ${plan.title}`,
-              quantity: 1,
-              currency_id: 'BRL',
-              unit_price: plan.price
-            }
-          ],
-          payer: {
-            name: safeName.split(' ')[0],
-            surname: safeName.split(' ').slice(1).join(' '),
-            email: safeEmail,
-            identification: { type: "CPF", number: safeDoc }
-          },
-          back_urls: {
-            success: window.location.href, 
-            failure: window.location.href,
-            pending: window.location.href
-          },
-          auto_return: "approved",
-          statement_descriptor: "SPARKY TI",
-          payment_methods: {
-              excluded_payment_types: [{ id: "ticket" }], 
-              installments: 12
-          }
+          title: `Plano Sparky ${plan.title}`,
+          price: plan.price,
+          email: safeEmail
         })
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Erro ao comunicar com Mercado Pago');
+        throw new Error(data.error || data.message || 'Erro ao gerar o link de pagamento');
       }
 
       if (data.init_point) {
         window.location.href = data.init_point; 
       } else {
-        throw new Error('Link de pagamento não gerado');
+        throw new Error('Link de pagamento não gerado pela função');
       }
 
     } catch (error: any) {
