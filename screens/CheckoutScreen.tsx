@@ -117,6 +117,7 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({ user, tier, onCo
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
+          planId: tier,
           title: `Plano Sparky ${plan.title}`,
           price: plan.price,
           email: safeEmail

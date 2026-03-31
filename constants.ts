@@ -18,10 +18,8 @@ const getEnvVar = (key: string, fallback: string) => {
 };
 
 export const MERCADO_PAGO_CONFIG = {
-  // Access Token deve vir de variáveis de ambiente (.env)
-  // Fallback mantido APENAS para funcionamento da demo. 
-  // TODO: Remover fallback string em produção.
-  ACCESS_TOKEN: getEnvVar("VITE_MP_ACCESS_TOKEN", "APP_USR-8166086179258406-121408-05022e7e0a81de5650dd39b508fe1fc7-92174155"), 
+  // Access Token deve vir APENAS de variáveis de ambiente no BACKEND.
+  // TODO: Remover propriedades não utilizadas.
   RECEIVER_NAME: "Sparky Educação Digital Ltda",
   RECEIVER_DOCUMENT: "00.000.000/0001-99", 
   STATEMENT_DESCRIPTOR: "SPARKYAPP", 
