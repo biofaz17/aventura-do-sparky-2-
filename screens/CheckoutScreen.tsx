@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { SubscriptionTier, UserProfile } from '../types';
 import { PLANS } from '../constants';
 import { ArrowLeft, Loader2, Lock, CheckCircle, Store, AlertTriangle, User, Mail, FileText, ArrowRight, ShieldCheck, Building2 } from 'lucide-react';
+import { supabase } from '../services/supabase';
 
 interface CheckoutScreenProps {
   user: UserProfile;
@@ -111,10 +112,13 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({ user, tier, onCo
       // SECURITY: Input Sanitization before sending payload
       const safeEmail = sanitizeInput(payerEmail);
 
+      const { data: { session } } = await supabase.auth.getSession();
+      
       const response = await fetch('https://aluzklqouexuruppwumz.supabase.co/functions/v1/create_preference', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
         },
         body: JSON.stringify({
           planId: tier,
