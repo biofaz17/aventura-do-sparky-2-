@@ -17,6 +17,7 @@ import { Mail, Loader2, ShieldCheck, AlertCircle } from 'lucide-react';
 import SupabaseTest from './components/SupabaseTest';
 import { AdminPanel } from './screens/AdminPanel';
 import { HomeScreen } from './screens/HomeScreen';
+import { supabase } from './services/supabase';
 
 // Enhanced Toast Notification
 const NotificationToast = ({ msg, subMsg, show }: { msg: string, subMsg?: string, show: boolean }) => (
@@ -115,37 +116,51 @@ export default function App() {
       setScreen(Screen.VERIFYING);
       
       try {
-          // Chamada real para a API do Mercado Pago (Seguro)
-          const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-              headers: {
-                  'Authorization': `Bearer ${MERCADO_PAGO_CONFIG.ACCESS_TOKEN}`
+          // Em vez de chamar a API do Mercado Pago diretamente (que expõe o Token),
+          // vamos aguardar o Webhook atualizar o perfil do usuário no Supabase.
+          // Fazemos uma consulta ao perfil para ver se o plano já mudou.
+          
+          let attempts = 0;
+          const maxAttempts = 5;
+          const delay = 3000; // 3 segundos entre tentativas
+
+          const checkSubscription = async () => {
+              const { data, error } = await supabase
+                  .from('profiles')
+                  .select('subscription')
+                  .eq('id', user?.id)
+                  .single();
+
+              if (error) throw error;
+              return data.subscription !== SubscriptionTier.FREE;
+          };
+
+          const poll = async () => {
+              const isUpdated = await checkSubscription();
+              if (isUpdated) {
+                  // Sucesso! O Webhook já processou.
+                  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user?.id).single();
+                  setUser(profile as UserProfile);
+                  setScreen(Screen.PAYMENT_SUCCESS);
+                  window.history.replaceState({}, document.title, window.location.pathname);
+              } else if (attempts < maxAttempts) {
+                  attempts++;
+                  setTimeout(poll, delay);
+              } else {
+                  // Tempo esgotado
+                  setScreen(Screen.DASHBOARD);
+                  showNotification("Processando Pagamento", "Seu pagamento foi recebido e está sendo processado. Seu acesso será liberado em instantes.");
+                  window.history.replaceState({}, document.title, window.location.pathname);
               }
-          });
+          };
 
-          const data = await response.json();
+          await poll();
 
-          // Limpa a URL apenas após a tentativa de verificação
-          window.history.replaceState({}, document.title, window.location.pathname);
-
-          if (data.status === 'approved') {
-              const updatedUser = {
-                  ...user!,
-                  subscription: pendingSubscriptionTier || SubscriptionTier.PRO,
-                  isGuest: false,
-              };
-              setUser(updatedUser);
-              setScreen(Screen.PAYMENT_SUCCESS);
-          } else if (data.status === 'pending' || data.status === 'in_process') {
-              setScreen(Screen.DASHBOARD);
-              showNotification("Pagamento Pendente", "Seu acesso será liberado assim que o pagamento for confirmado.");
-          } else {
-              setScreen(Screen.DASHBOARD);
-              alert("O pagamento não foi aprovado pela operadora.");
-          }
       } catch (error) {
           console.error("Erro na verificação de pagamento:", error);
           setScreen(Screen.DASHBOARD);
           alert("Erro técnico ao verificar pagamento. Se você pagou, entre em contato com o suporte.");
+          window.history.replaceState({}, document.title, window.location.pathname);
       }
   };
 
