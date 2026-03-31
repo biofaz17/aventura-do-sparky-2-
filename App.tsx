@@ -435,6 +435,7 @@ export default function App() {
 
       {showSubscriptionModal && (
         <SubscriptionModal
+          userTier={user?.subscription || SubscriptionTier.FREE}
           onCheckoutStart={handleCheckoutStart}
           onClose={() => setShowSubscriptionModal(false)}
         />

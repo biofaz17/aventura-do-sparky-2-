@@ -5,13 +5,17 @@ import { SubscriptionTier } from '../types';
 import { PLANS } from '../constants';
 
 interface SubscriptionModalProps {
+  userTier: SubscriptionTier;
   onCheckoutStart: (tier: SubscriptionTier) => void;
   onClose: () => void;
 }
 
-export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ onCheckoutStart, onClose }) => {
+export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ userTier, onCheckoutStart, onClose }) => {
   const starter = PLANS[SubscriptionTier.STARTER];
   const pro = PLANS[SubscriptionTier.PRO];
+
+  const isStarter = userTier === SubscriptionTier.STARTER;
+  const isPro = userTier === SubscriptionTier.PRO;
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
@@ -43,9 +47,15 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ onCheckout
                   <li key={i} className="flex gap-2 items-start"><Check className="text-emerald-400 shrink-0 mt-0.5" size={16} /> {feature}</li>
                ))}
              </ul>
-             <Button variant="primary" onClick={() => onCheckoutStart(SubscriptionTier.STARTER)} size="md" className="w-full mt-auto">
-               Comprar Agora
-             </Button>
+             <Button 
+                variant="primary" 
+                onClick={() => onCheckoutStart(SubscriptionTier.STARTER)} 
+                disabled={isStarter || isPro}
+                size="md" 
+                className="w-full mt-auto"
+              >
+                {isStarter || isPro ? "Sua Trilha Atual" : "Comprar Agora"}
+              </Button>
           </div>
 
           {/* PRO */}
@@ -62,9 +72,16 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({ onCheckout
                   <li key={i} className="flex gap-2 items-start"><Check className="text-emerald-400 shrink-0 mt-0.5" size={16} /> {feature}</li>
                ))}
              </ul>
-             <Button variant="success" onClick={() => onCheckoutStart(SubscriptionTier.PRO)} size="md" className="w-full mt-auto">
-               Comprar Agora
-             </Button>
+             <Button 
+                variant="success" 
+                onClick={() => onCheckoutStart(SubscriptionTier.PRO)} 
+                disabled={isPro}
+                size="md" 
+                className="w-full mt-auto shadow-lg shadow-green-900/50 flex items-center justify-center gap-2"
+              >
+                {isPro ? <Check size={20} /> : <Zap size={20} />}
+                {isPro ? "Sua Trilha Atual" : isStarter ? "Fazer Upgrade Agora" : "Comprar Agora"}
+              </Button>
           </div>
 
         </div>
