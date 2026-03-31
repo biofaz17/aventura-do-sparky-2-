@@ -15,7 +15,7 @@ type PaymentStatus = 'idle' | 'loading' | 'error';
 
 // Security: Basic Sanitization
 const sanitizeInput = (input: string) => {
-  return input.replace(/[<>'"/]/g, '').trim();
+  return input.replace(/[<>'"/]/g, '');
 };
 
 // Helper de Validação de CPF
