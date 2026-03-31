@@ -120,7 +120,8 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({ user, tier, onCo
           planId: tier,
           title: `Plano Sparky ${plan.title}`,
           price: plan.price,
-          email: safeEmail
+          email: safeEmail,
+          userId: user.id
         })
       });
 
