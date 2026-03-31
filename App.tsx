@@ -100,15 +100,21 @@ export default function App() {
   // PAYMENT RETURN HANDLER (Mercado Pago Redirects)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const paymentId = params.get('payment_id') || params.get('collection_id');
-    const status = params.get('collection_status') || params.get('status');
+    let paymentId = params.get('payment_id') || params.get('collection_id');
+    let status = params.get('collection_status') || params.get('status');
 
-    // Se voltamos do MP, precisamos verificar se o pagamento é real
+    // Mercado Pago as vezes retorna a literal string "null"
+    if (paymentId === 'null') paymentId = null;
+    if (status === 'null') status = null;
+
+    // Se voltamos do MP com sucesso, precisamos verificar se o pagamento é real
     if (paymentId && user && screen !== Screen.VERIFYING && screen !== Screen.PAYMENT_SUCCESS) {
         verifyPayment(paymentId);
     } else if ((status === 'failure' || status === 'null') && window.location.search.includes('status')) {
+        // Se falhou ou o usuário desistiu, voltamos ao painel limpo
         window.history.replaceState({}, document.title, window.location.pathname);
-        showNotification("Pagamento não concluído", "Tente novamente ou escolha outro método.");
+        setScreen(Screen.DASHBOARD);
+        showNotification("Pagamento não concluído", "Se desejar, você pode tentar o checkout novamente a qualquer momento.");
     }
   }, [user]);
 
