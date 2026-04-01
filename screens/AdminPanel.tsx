@@ -170,20 +170,26 @@ const EditUserModal: React.FC<{
     const updatedProfile = {
       ...(user.profile_data || {}),
       subscription: newSub,
-      parentEmail: newEmail,
     };
 
-    const { error: err } = await supabase.from('users').update({
-      password: newPassword,
-      parent_email: newEmail,
-      profile_data: updatedProfile,
-    }).eq('id', user.id);
+    try {
+      const { error: err } = await supabase.from('users').update({
+        password: newPassword,
+        parent_email: newEmail,
+        profile_data: updatedProfile,
+      }).eq('id', user.id);
 
-    if (err) {
-      setError(err.message);
-    } else {
-      onSaved();
-      onClose();
+      if (err) {
+        console.error('❌ Erro ao atualizar usuário:', err);
+        setError(`Erro: ${err.message}`);
+      } else {
+        console.log('✅ Usuário atualizado com sucesso:', user.id);
+        onSaved();
+        onClose();
+      }
+    } catch (catchErr) {
+      console.error('❌ Exceção ao atualizar usuário:', catchErr);
+      setError('Erro inesperado ao salvar. Verifique o console.');
     }
     setSaving(false);
   };
@@ -301,6 +307,8 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [submitting, setSubmitting] = useState(false);
   const [editingUser, setEditingUser] = useState<UserRecord | null>(null);
   const [copyToast, setCopyToast] = useState(false);
+  const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
+  const [testMessage, setTestMessage] = useState('');
 
   // Form fields
   const [newName, setNewName] = useState('');
@@ -314,12 +322,21 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const loadUsers = async () => {
     setLoading(true);
     try {
+      console.log('📡 Carregando usuários do Supabase...');
       const { data, error } = await supabase
         .from('users')
         .select('id, username, cpf, parent_email, password, created_at, last_active, profile_data')
         .order('created_at', { ascending: false });
-      if (!error) setUsers(data || []);
-    } catch (_) {}
+      
+      if (error) {
+        console.error('❌ Erro ao carregar usuários:', error);
+      } else {
+        console.log(`✅ ${data?.length || 0} usuários carregados com sucesso`, data);
+        setUsers(data || []);
+      }
+    } catch (err) {
+      console.error('❌ Exceção ao carregar usuários:', err);
+    }
     setLoading(false);
   };
 
@@ -355,8 +372,6 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     const profileData = {
       id: userId,
       name: newName.trim(),
-      password: newPassword,
-      parentEmail: newEmail,
       age: parseInt(newAge) || 8,
       subscription: SubscriptionTier.PRO,
       progress: { unlockedLevels: 1, stars: 0, creativeProjects: 0, totalBlocksUsed: 0, secretsFound: 0 },
@@ -365,31 +380,153 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       lastActive: Date.now(),
     };
 
-    const { error } = await supabase.from('users').insert([{
-      username: cleanUsername,
-      password: newPassword,
-      cpf: newCpf.replace(/\D/g, ''),
-      parent_email: newEmail,
-      profile_data: profileData,
-    }]);
+    try {
+      console.log('📝 Criando novo usuário:', {
+        username: cleanUsername,
+        id: userId,
+        parent_email: newEmail,
+      });
 
-    if (error) {
-      setFormError(error.message.includes('unique')
-        ? `Já existe um jogador com o nome "${cleanUsername}". Tente outra variação.`
-        : error.message);
-    } else {
-      setFormSuccess(`✅ Jogador "${newName.trim()}" criado com acesso PRO! Login: ${cleanUsername} | Senha: ${newPassword}`);
-      setNewName(''); setNewPassword(''); setNewAge('8'); setNewEmail(''); setNewCpf('');
-      setShowForm(false);
-      await loadUsers();
+      const { error, data } = await supabase.from('users').insert([{
+        id: userId,
+        username: cleanUsername,
+        password: newPassword,
+        cpf: newCpf.replace(/\D/g, ''),
+        parent_email: newEmail,
+        profile_data: profileData,
+      }]);
+
+      if (error) {
+        console.error('❌ Erro ao criar usuário (Supabase):', {
+          code: error.code,
+          message: error.message,
+          details: (error as any).details,
+          hint: (error as any).hint,
+        });
+        
+        // Mensagens de erro mais específicas
+        let errorMsg = `Erro: ${error.message}`;
+        if (error.message.includes('unique')) {
+          errorMsg = `Já existe um jogador com o nome "${cleanUsername}". Tente outra variação.`;
+        } else if (error.code === 'PGRST204' || error.message.includes('No rows')) {
+          errorMsg = 'Tabela "users" não encontrada. Verifique banco de dados.';
+        } else if (error.message.includes('permission') || error.message.includes('policy')) {
+          errorMsg = '⚠️ Sem permissão para criar usuários. Verifique políticas RLS no Supabase.';
+        } else if (error.message.includes('fetch')) {
+          errorMsg = '❌ Erro de conexão com Supabase. Verifique URL e chave.';
+        }
+        setFormError(errorMsg);
+      } else {
+        console.log('✅ Usuário criado com sucesso! Dados:', data);
+        setFormSuccess(`✅ Jogador "${newName.trim()}" criado com acesso PRO! Login: ${cleanUsername} | Senha: ${newPassword}`);
+        setNewName(''); setNewPassword(''); setNewAge('8'); setNewEmail(''); setNewCpf('');
+        setShowForm(false);
+        await loadUsers();
+      }
+    } catch (catchErr: any) {
+      console.error('❌ Exceção ao criar usuário:', {
+        name: catchErr.name,
+        message: catchErr.message,
+        stack: catchErr.stack,
+        fullError: catchErr,
+      });
+      
+      let errorMsg = '❌ Erro inesperado ao criar usuário.';
+      if (catchErr.message?.includes('fetch')) {
+        errorMsg = '❌ Erro de conexão (fetch). Verifique internet e URL Supabase.';
+      } else if (catchErr.message?.includes('CORS')) {
+        errorMsg = '❌ Erro CORS. Verifique configurações de domínio no Supabase.';
+      }
+      setFormError(errorMsg);
     }
     setSubmitting(false);
   };
 
   const handleDelete = async (id: string, name: string) => {
     if (!window.confirm(`Excluir definitivamente a conta de "${name}"? Esta ação não pode ser desfeita.`)) return;
-    await supabase.from('users').delete().eq('id', id);
-    await loadUsers();
+    
+    try {
+      console.log('🗑️ Deletando usuário:', id);
+      const { error } = await supabase.from('users').delete().eq('id', id);
+      
+      if (error) {
+        console.error('❌ Erro ao deletar usuário:', error);
+        alert(`Erro ao deletar: ${error.message}`);
+      } else {
+        console.log('✅ Usuário deletado com sucesso');
+        await loadUsers();
+      }
+    } catch (err) {
+      console.error('❌ Exceção ao deletar usuário:', err);
+      alert('Erro inesperado ao deletar usuário');
+    }
+  };
+
+  // Teste de Diagnóstico de Conexão
+  const handleTestConnection = async () => {
+    setTestStatus('testing');
+    setTestMessage('🔍 Testando conexão com Supabase...');
+
+    try {
+      console.log('🔍 Iniciando diagnóstico de Supabase...');
+      
+      // 1. Teste básico de fetch
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseKey) {
+        console.error('❌ Variáveis de ambiente não configuradas');
+        setTestStatus('error');
+        setTestMessage('❌ VITE_SUPABASE_URL ou VITE_SUPABASE_ANON_KEY não configuradas em .env.local');
+        return;
+      }
+
+      // 2. Teste de conectividade básica
+      const testUrl = `${supabaseUrl}/rest/v1/`;
+      console.log(`📡 Testando URL: ${testUrl.split('?')[0]}`);
+      
+      const response = await fetch(testUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      // 3. Teste de leitura de tabela
+      console.log('📖 Testando leitura da tabela "users"...');
+      const { data, error } = await supabase
+        .from('users')
+        .select('count', { count: 'exact' });
+
+      if (error) {
+        throw new Error(`Erro Supabase: ${error.message}`);
+      }
+
+      console.log('✅ Teste de diagnóstico bem-sucedido!');
+      setTestStatus('success');
+      setTestMessage(`✅ Conexão OK! Tabela "users" contém dados. Verifique policies RLS se criar usuário falhar.`);
+    } catch (err: any) {
+      console.error('❌ Erro no diagnóstico:', err);
+      
+      let msg = String(err.message || err);
+      if (msg.includes('fetch')) {
+        msg = '❌ Erro de fetch: Verifique URL Supabase, internet ou CORS';
+      } else if (msg.includes('401') || msg.includes('Unauthorized')) {
+        msg = '❌ Erro 401: Chave Supabase inválida ou expirada';
+      } else if (msg.includes('403') || msg.includes('permission') || msg.includes('policy')) {
+        msg = '❌ Erro 403: Sem permissão. Verifique políticas RLS na tabela "users"';
+      } else if (msg.includes('404') || msg.includes('users')) {
+        msg = '❌ Erro 404: Tabela "users" não encontrada no Supabase';
+      }
+      
+      setTestStatus('error');
+      setTestMessage(msg);
+    }
   };
 
   // Stats
@@ -731,10 +868,43 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             <div className="space-y-8">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-white">Health Check & Infra</h2>
-                <button onClick={loadUsers} className="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-700 transition">
-                  <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Recarregar Logs
-                </button>
+                <div className="flex gap-3">
+                  <button 
+                    onClick={handleTestConnection} 
+                    disabled={testStatus === 'testing'}
+                    className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition"
+                  >
+                    🔍 {testStatus === 'testing' ? 'Testando...' : 'Teste Diagnóstico'}
+                  </button>
+                  <button onClick={loadUsers} className="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-700 transition">
+                    <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Recarregar Logs
+                  </button>
+                </div>
               </div>
+
+              {/* Resultado do Teste */}
+              {testStatus !== 'idle' && (
+                <div className={`p-4 rounded-2xl border-2 flex items-start gap-3 ${
+                  testStatus === 'success' ? 'bg-emerald-950/30 border-emerald-900 text-emerald-300' :
+                  testStatus === 'error' ? 'bg-red-950/30 border-red-900 text-red-300' :
+                  'bg-blue-950/30 border-blue-900 text-blue-300'
+                }`}>
+                  <div className="shrink-0 mt-0.5">
+                    {testStatus === 'success' && '✅'}
+                    {testStatus === 'error' && '❌'}
+                    {testStatus === 'testing' && '🔍'}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-bold text-sm">{testMessage}</p>
+                    {testStatus === 'error' && (
+                      <p className="text-xs mt-2 opacity-75">
+                        💡 Se "criar usuário" falha, execute este teste primeiro para diagnosticar.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800">
                   <h4 className="font-bold text-white mb-4 flex items-center gap-2 text-sm">
