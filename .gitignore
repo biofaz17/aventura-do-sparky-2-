@@ -24,4 +24,25 @@ dist-ssr
 *.sw?
 
 .vercel
-.env*.local
+
+# === SEGURANÇA: Arquivos com dados sensíveis ===
+.env
+.env.local
+.env.*.local
+.env.production.local
+*.pem
+*.key
+*.crt
+*.p12
+secrets/
+.DS_Store
+Thumbs.db
+
+# === IDE & Editor ===
+*.swp
+*.swo
+*~
+.idea/
+.vscode/settings.json
+.vscode/launch.json
+.env.*.local
