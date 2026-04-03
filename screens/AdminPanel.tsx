@@ -480,14 +480,20 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         message: catchErr.message,
         stack: catchErr.stack,
         fullError: catchErr,
+        type: typeof catchErr,
+        constructor: catchErr?.constructor?.name,
       });
       
       let errorMsg = '❌ Erro inesperado ao criar usuário.';
-      const catchErrText = String(catchErr?.message || catchErr?.details || 'Erro desconhecido');
+      const catchErrText = String(catchErr?.message || catchErr?.details || catchErr || 'Erro desconhecido');
+      console.error('Catch error text:', catchErrText);
+      
       if (catchErrText.toLowerCase().includes('fetch')) {
         errorMsg = '❌ Erro de conexão (fetch). Verifique internet e URL Supabase.';
       } else if (catchErrText.toLowerCase().includes('cors')) {
         errorMsg = '❌ Erro CORS. Verifique configurações de domínio no Supabase.';
+      } else if (catchErrText.toLowerCase().includes('network') || catchErrText.toLowerCase().includes('enotfound')) {
+        errorMsg = '❌ Erro de rede. Verifique conexão com internet.';
       }
       setFormError(errorMsg);
     }

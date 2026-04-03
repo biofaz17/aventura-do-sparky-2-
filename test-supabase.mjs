@@ -1,5 +1,12 @@
 // Test script to check Supabase connection and table access
-import { supabase } from '../services/supabase.js';
+// Run with: node --input-type=module --eval "$(cat test-supabase.js)"
+
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = 'https://xaluzklqouexuruppwumz.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFsdXprbHFvdWV4dXJ1cHB3dW16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwNjIzMDgsImV4cCI6MjA4MTYzODMwOH0.ChAxpI6gi7RX-W9XShu_21-q1diBfFBSsPgCs8S_o3Q';
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 async function testSupabase() {
   console.log('🔍 Testing Supabase connection...');
@@ -8,7 +15,7 @@ async function testSupabase() {
     // Test basic connection
     const { data: session, error: sessionError } = await supabase.auth.getSession();
     if (sessionError) {
-      console.error('❌ Auth session error:', sessionError);
+      console.error('❌ Auth session error:', sessionError.message);
       return;
     }
     console.log('✅ Auth session OK');
@@ -20,7 +27,8 @@ async function testSupabase() {
       .limit(1);
 
     if (selectError) {
-      console.error('❌ Error accessing users table:', selectError);
+      console.error('❌ Error accessing users table:', selectError.message);
+      console.error('Error details:', selectError);
       return;
     }
     console.log('✅ Users table accessible, found', users?.length || 0, 'records');
@@ -44,21 +52,23 @@ async function testSupabase() {
       }
     };
 
-    console.log('🔍 Testing insert (will rollback)...');
+    console.log('🔍 Testing insert...');
     const { error: insertError } = await supabase
       .from('users')
       .insert([testData]);
 
     if (insertError) {
-      console.error('❌ Insert test failed:', insertError);
+      console.error('❌ Insert test failed:', insertError.message);
+      console.error('Error details:', insertError);
     } else {
       console.log('✅ Insert test passed');
       // Clean up test data
       await supabase.from('users').delete().eq('id', testData.id);
+      console.log('🧹 Test data cleaned up');
     }
 
   } catch (err) {
-    console.error('❌ Unexpected error:', err);
+    console.error('❌ Unexpected error:', err.message || err);
   }
 }
 
