@@ -323,20 +323,17 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const loadUsers = async () => {
     setLoading(true);
     try {
-      console.log('📡 Carregando usuários do Supabase...');
-      const { data, error } = await supabase
-        .from('users')
-        .select('id, username, cpf, parent_email, password, created_at, last_active, profile_data')
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error('❌ Erro ao carregar usuários:', error);
-      } else {
-        console.log(`✅ ${data?.length || 0} usuários carregados com sucesso`, data);
-        setUsers(data || []);
+      console.log('📡 Carregando usuários da API...');
+      const response = await fetch('/api/users');
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-    } catch (err) {
-      console.error('❌ Exceção ao carregar usuários:', err);
+      const data = await response.json();
+      console.log(`✅ ${data.users?.length || 0} usuários carregados com sucesso`, data.users);
+      setUsers(data.users || []);
+    } catch (err: any) {
+      console.error('❌ Erro ao carregar usuários:', err);
+      setError(`Erro ao carregar usuários: ${err.message}`);
     }
     setLoading(false);
   };
@@ -367,25 +364,6 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     if (newPassword.length < 4) { setFormError('Senha muito curta (mín. 4 caracteres).'); return; }
     if (!newEmail.includes('@') || !newEmail.includes('.')) { setFormError('Email inválido.'); return; }
 
-    if (!supabase || typeof supabase.from !== 'function') {
-      setFormError('Supabase não configurado corretamente. Verifique VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.');
-      return;
-    }
-
-    // Test if supabase is the proxy (not properly configured)
-    try {
-      const testCall = supabase.from('test');
-      if (typeof testCall === 'function') {
-        const testResult = await testCall();
-        if (testResult?.error?.message?.includes('Supabase não configurado')) {
-          setFormError('Supabase não configurado corretamente. Verifique VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.');
-          return;
-        }
-      }
-    } catch (e) {
-      // If test call throws, continue (might be real Supabase)
-    }
-
     setSubmitting(true);
 
     const cleanUsername = newName.toLowerCase().trim().replace(/\s+/g, '');
@@ -403,76 +381,63 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     };
 
     try {
-      console.log('📝 Criando novo usuário:', {
-        username: cleanUsername,
-        id: userId,
-        parent_email: newEmail,
+      console.log('📝 Criando novo usuário via API...');
+
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: cleanUsername,
+          password: newPassword,
+          cpf: newCpf.replace(/\D/g, ''),
+          parent_email: newEmail,
+          name: newName.trim(),
+          age: parseInt(newAge) || 8,
+          subscription: SubscriptionTier.PRO,
+        }),
       });
 
-      const { error, data } = await supabase.from('users').insert([{
-        id: userId,
-        username: cleanUsername,
-        password: newPassword,
-        cpf: newCpf.replace(/\D/g, ''),
-        parent_email: newEmail,
-        profile_data: profileData,
-      }]);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
 
-      if (error) {
-        console.error('❌ Erro ao criar usuário (Supabase):', {
-          code: error.code,
-          message: error.message,
-          details: (error as any).details,
-          hint: (error as any).hint,
+      const data = await response.json();
+      console.log('✅ Usuário criado com sucesso! Dados:', data);
+      const successMessage = `✅ Jogador "${newName.trim()}" criado com acesso PRO! Login: ${cleanUsername} | Senha: ${newPassword}`;
+      setFormSuccess(successMessage);
+
+      try {
+        const emailResult = await sendConfirmationEmail({
+          responsibleEmail: newEmail,
+          responsibleName: undefined,
+          playerName: newName.trim(),
+          playerUsername: cleanUsername,
+          initialPassword: newPassword,
+          playerAge: parseInt(newAge) || 8,
+          cpf: newCpf.replace(/\D/g, ''),
+          subscriptionTier: SubscriptionTier.PRO,
+          createdAt: new Date().toLocaleString('pt-BR'),
         });
-        
-        // Mensagens de erro mais específicas
-        const errorText = String(error?.message || (error as any)?.details || 'Erro desconhecido');
-        let errorMsg = `Erro: ${errorText}`;
-        if (errorText.toLowerCase().includes('unique')) {
-          errorMsg = `Já existe um jogador com o nome "${cleanUsername}". Tente outra variação.`;
-        } else if (error.code === 'PGRST204' || errorText.toLowerCase().includes('no rows')) {
-          errorMsg = 'Tabela "users" não encontrada. Verifique banco de dados.';
-        } else if (errorText.toLowerCase().includes('permission') || errorText.toLowerCase().includes('policy')) {
-          errorMsg = '⚠️ Sem permissão para criar usuários. Verifique políticas RLS no Supabase.';
-        } else if (errorText.toLowerCase().includes('fetch')) {
-          errorMsg = '❌ Erro de conexão com Supabase. Verifique URL e chave.';
-        }
-        setFormError(errorMsg);
-      } else {
-        console.log('✅ Usuário criado com sucesso! Dados:', data);
-        const successMessage = `✅ Jogador "${newName.trim()}" criado com acesso PRO! Login: ${cleanUsername} | Senha: ${newPassword}`;
-        setFormSuccess(successMessage);
 
-        try {
-          const emailResult = await sendConfirmationEmail({
-            responsibleEmail: newEmail,
-            responsibleName: undefined,
-            playerName: newName.trim(),
-            playerUsername: cleanUsername,
-            initialPassword: newPassword,
-            playerAge: parseInt(newAge) || 8,
-            cpf: newCpf.replace(/\D/g, ''),
-            subscriptionTier: SubscriptionTier.PRO,
-            createdAt: new Date().toLocaleString('pt-BR'),
-          });
-
-          if (!emailResult.success) {
-            setFormError(`⚠️ Confirmação de cadastro criada, mas não foi possível enviar o e-mail: ${emailResult.message}`);
-            if ((emailResult as any).mailto) {
-              console.warn('[EmailService] Link mailto fallback:', (emailResult as any).mailto);
-            }
-          } else {
-            setFormSuccess(`${successMessage} ${emailResult.message}`);
+        if (!emailResult.success) {
+          setFormError(`⚠️ Confirmação de cadastro criada, mas não foi possível enviar o e-mail: ${emailResult.message}`);
+          if ((emailResult as any).mailto) {
+            console.warn('[EmailService] Link mailto fallback:', (emailResult as any).mailto);
           }
-        } catch (emailErr: any) {
-          console.error('❌ Erro ao enviar e-mail de confirmação:', emailErr);
-          setFormError(`⚠️ Usuário criado, mas erro ao enviar e-mail: ${String(emailErr?.message || 'Erro desconhecido')}`);
+        } else {
+          setFormSuccess(`${successMessage} ${emailResult.message}`);
         }
+      } catch (emailErr: any) {
+        console.error('❌ Erro ao enviar e-mail de confirmação:', emailErr);
+        setFormError(`⚠️ Usuário criado, mas erro ao enviar e-mail: ${String(emailErr?.message || 'Erro desconhecido')}`);
+      }
 
-        setNewName(''); setNewPassword(''); setNewAge('8'); setNewEmail(''); setNewCpf('');
-        setShowForm(false);
-        await loadUsers();
+      setNewName(''); setNewPassword(''); setNewAge('8'); setNewEmail(''); setNewCpf('');
+      setShowForm(false);
+      await loadUsers();
       }
     } catch (catchErr: any) {
       console.error('❌ Exceção ao criar usuário:', {
@@ -502,21 +467,27 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
   const handleDelete = async (id: string, name: string) => {
     if (!window.confirm(`Excluir definitivamente a conta de "${name}"? Esta ação não pode ser desfeita.`)) return;
-    
+
     try {
       console.log('🗑️ Deletando usuário:', id);
-      const { error } = await supabase.from('users').delete().eq('id', id);
-      
-      if (error) {
-        console.error('❌ Erro ao deletar usuário:', error);
-        alert(`Erro ao deletar: ${error.message}`);
-      } else {
-        console.log('✅ Usuário deletado com sucesso');
-        await loadUsers();
+      const response = await fetch('/api/users', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `HTTP ${response.status}`);
       }
-    } catch (err) {
-      console.error('❌ Exceção ao deletar usuário:', err);
-      alert('Erro inesperado ao deletar usuário');
+
+      console.log('✅ Usuário deletado com sucesso');
+      await loadUsers();
+    } catch (err: any) {
+      console.error('❌ Erro ao deletar usuário:', err);
+      alert(`Erro ao deletar: ${err.message}`);
     }
   };
 
