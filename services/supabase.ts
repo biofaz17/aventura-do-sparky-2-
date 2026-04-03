@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 
-// Supabase client removed from frontend for security
-// All database operations now go through backend API endpoints
+// Supabase client removed from frontend for security reasons
+// All database operations are now handled through secure backend API endpoints
+// This prevents exposing sensitive keys in client-side code
 
-export const supabase = null; // Not available in frontend
+export const supabase = null;

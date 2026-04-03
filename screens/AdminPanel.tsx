@@ -174,20 +174,30 @@ const EditUserModal: React.FC<{
     };
 
     try {
-      const { error: err } = await supabase.from('users').update({
-        password: newPassword,
-        parent_email: newEmail,
-        profile_data: updatedProfile,
-      }).eq('id', user.id);
+      console.log('📝 Atualizando usuário via API...');
 
-      if (err) {
-        console.error('❌ Erro ao atualizar usuário:', err);
-        setError(`Erro: ${err.message}`);
-      } else {
-        console.log('✅ Usuário atualizado com sucesso:', user.id);
-        onSaved();
-        onClose();
+      const response = await fetch('/api/users', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: user.id,
+          password: newPassword,
+          parent_email: newEmail,
+          profile_data: updatedProfile,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `HTTP ${response.status}`);
       }
+
+      const data = await response.json();
+      console.log('✅ Usuário atualizado com sucesso:', data);
+      onSaved();
+      onClose();
     } catch (catchErr) {
       console.error('❌ Exceção ao atualizar usuário:', catchErr);
       setError('Erro inesperado ao salvar. Verifique o console.');
