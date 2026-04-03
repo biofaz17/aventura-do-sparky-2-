@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../services/supabase';
+import { sendConfirmationEmail } from '../services/emailService';
 import {
   Users, ShoppingBag, Server, LogOut, RefreshCw, Search,
   UserPlus, X, CheckCircle, AlertTriangle, Trash2, Star,
@@ -364,6 +365,12 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     setFormSuccess('');
     if (newName.trim().length < 3) { setFormError('Nome muito curto (mín. 3 caracteres).'); return; }
     if (newPassword.length < 4) { setFormError('Senha muito curta (mín. 4 caracteres).'); return; }
+
+    if (!supabase || typeof supabase.from !== 'function') {
+      setFormError('Supabase não configurado corretamente. Verifique VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.');
+      return;
+    }
+
     setSubmitting(true);
 
     const cleanUsername = newName.toLowerCase().trim().replace(/\s+/g, '');
@@ -405,20 +412,44 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         });
         
         // Mensagens de erro mais específicas
-        let errorMsg = `Erro: ${error.message}`;
-        if (error.message.includes('unique')) {
+        const errorText = String(error?.message || (error as any)?.details || 'Erro desconhecido');
+        let errorMsg = `Erro: ${errorText}`;
+        if (errorText.toLowerCase().includes('unique')) {
           errorMsg = `Já existe um jogador com o nome "${cleanUsername}". Tente outra variação.`;
-        } else if (error.code === 'PGRST204' || error.message.includes('No rows')) {
+        } else if (error.code === 'PGRST204' || errorText.toLowerCase().includes('no rows')) {
           errorMsg = 'Tabela "users" não encontrada. Verifique banco de dados.';
-        } else if (error.message.includes('permission') || error.message.includes('policy')) {
+        } else if (errorText.toLowerCase().includes('permission') || errorText.toLowerCase().includes('policy')) {
           errorMsg = '⚠️ Sem permissão para criar usuários. Verifique políticas RLS no Supabase.';
-        } else if (error.message.includes('fetch')) {
+        } else if (errorText.toLowerCase().includes('fetch')) {
           errorMsg = '❌ Erro de conexão com Supabase. Verifique URL e chave.';
         }
         setFormError(errorMsg);
       } else {
         console.log('✅ Usuário criado com sucesso! Dados:', data);
-        setFormSuccess(`✅ Jogador "${newName.trim()}" criado com acesso PRO! Login: ${cleanUsername} | Senha: ${newPassword}`);
+        const successMessage = `✅ Jogador "${newName.trim()}" criado com acesso PRO! Login: ${cleanUsername} | Senha: ${newPassword}`;
+        setFormSuccess(successMessage);
+
+        const emailResult = await sendConfirmationEmail({
+          responsibleEmail: newEmail,
+          responsibleName: undefined,
+          playerName: newName.trim(),
+          playerUsername: cleanUsername,
+          initialPassword: newPassword,
+          playerAge: parseInt(newAge) || 8,
+          cpf: newCpf.replace(/\D/g, ''),
+          subscriptionTier: SubscriptionTier.PRO,
+          createdAt: new Date().toLocaleString('pt-BR'),
+        });
+
+        if (!emailResult.success) {
+          setFormError(`⚠️ Confirmação de cadastro criada, mas não foi possível enviar o e-mail: ${emailResult.message}`);
+          if ((emailResult as any).mailto) {
+            console.warn('[EmailService] Link mailto fallback:', (emailResult as any).mailto);
+          }
+        } else {
+          setFormSuccess(`${successMessage} ${emailResult.message}`);
+        }
+
         setNewName(''); setNewPassword(''); setNewAge('8'); setNewEmail(''); setNewCpf('');
         setShowForm(false);
         await loadUsers();
