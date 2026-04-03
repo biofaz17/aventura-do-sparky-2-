@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { supabase } from '../services/supabase';
 import { sendConfirmationEmail } from '../services/emailService';
 import {
   Users, ShoppingBag, Server, LogOut, RefreshCw, Search,
@@ -448,7 +447,6 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       setNewName(''); setNewPassword(''); setNewAge('8'); setNewEmail(''); setNewCpf('');
       setShowForm(false);
       await loadUsers();
-      }
     } catch (catchErr: any) {
       console.error('❌ Exceção ao criar usuário:', {
         name: catchErr.name,
@@ -504,30 +502,17 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   // Teste de Diagnóstico de Conexão
   const handleTestConnection = async () => {
     setTestStatus('testing');
-    setTestMessage('🔍 Testando conexão com Supabase...');
+    setTestMessage('🔍 Testando conexão com API...');
 
     try {
-      console.log('🔍 Iniciando diagnóstico de Supabase...');
-      
-      // 1. Teste básico de fetch
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      
-      if (!supabaseUrl || !supabaseKey) {
-        console.error('❌ Variáveis de ambiente não configuradas');
-        setTestStatus('error');
-        setTestMessage('❌ VITE_SUPABASE_URL ou VITE_SUPABASE_ANON_KEY não configuradas em .env.local');
-        return;
-      }
+      console.log('🔍 Iniciando diagnóstico da API...');
 
-      // 2. Teste de conectividade básica
-      const testUrl = `${supabaseUrl}/rest/v1/`;
-      console.log(`📡 Testando URL: ${testUrl.split('?')[0]}`);
-      
-      const response = await fetch(testUrl, {
+      // Teste de conectividade com o endpoint /api/users
+      console.log('📡 Testando endpoint /api/users...');
+
+      const response = await fetch('/api/users', {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${supabaseKey}`,
           'Content-Type': 'application/json',
         },
       });
@@ -536,33 +521,29 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      // 3. Teste de leitura de tabela
-      console.log('📖 Testando leitura da tabela "users"...');
-      const { data, error } = await supabase
-        .from('users')
-        .select('count', { count: 'exact' });
+      const data = await response.json();
 
-      if (error) {
-        throw new Error(`Erro Supabase: ${error.message}`);
+      if (Array.isArray(data)) {
+        console.log('✅ Teste de diagnóstico bem-sucedido!');
+        setTestStatus('success');
+        setTestMessage(`✅ API OK! Encontrados ${data.length} usuários.`);
+      } else {
+        throw new Error('Resposta inesperada da API');
       }
-
-      console.log('✅ Teste de diagnóstico bem-sucedido!');
-      setTestStatus('success');
-      setTestMessage(`✅ Conexão OK! Tabela "users" contém dados. Verifique policies RLS se criar usuário falhar.`);
     } catch (err: any) {
       console.error('❌ Erro no diagnóstico:', err);
-      
+
       let msg = String(err.message || err);
       if (msg.includes('fetch')) {
-        msg = '❌ Erro de fetch: Verifique URL Supabase, internet ou CORS';
-      } else if (msg.includes('401') || msg.includes('Unauthorized')) {
-        msg = '❌ Erro 401: Chave Supabase inválida ou expirada';
-      } else if (msg.includes('403') || msg.includes('permission') || msg.includes('policy')) {
-        msg = '❌ Erro 403: Sem permissão. Verifique políticas RLS na tabela "users"';
-      } else if (msg.includes('404') || msg.includes('users')) {
-        msg = '❌ Erro 404: Tabela "users" não encontrada no Supabase';
+        msg = '❌ Erro de fetch: Verifique se o servidor está rodando e acessível';
+      } else if (msg.includes('500')) {
+        msg = '❌ Erro 500: Problema no servidor. Verifique logs do Vercel';
+      } else if (msg.includes('404')) {
+        msg = '❌ Erro 404: Endpoint /api/users não encontrado';
+      } else if (msg.includes('403')) {
+        msg = '❌ Erro 403: Sem permissão para acessar a API';
       }
-      
+
       setTestStatus('error');
       setTestMessage(msg);
     }
