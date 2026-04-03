@@ -365,6 +365,7 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     setFormSuccess('');
     if (newName.trim().length < 3) { setFormError('Nome muito curto (mín. 3 caracteres).'); return; }
     if (newPassword.length < 4) { setFormError('Senha muito curta (mín. 4 caracteres).'); return; }
+    if (!newEmail.includes('@') || !newEmail.includes('.')) { setFormError('E-mail inválido.'); return; }
 
     if (!supabase || typeof supabase.from !== 'function') {
       setFormError('Supabase não configurado corretamente. Verifique VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.');
@@ -429,30 +430,41 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         const successMessage = `✅ Jogador "${newName.trim()}" criado com acesso PRO! Login: ${cleanUsername} | Senha: ${newPassword}`;
         setFormSuccess(successMessage);
 
-        const emailResult = await sendConfirmationEmail({
-          responsibleEmail: newEmail,
-          responsibleName: undefined,
-          playerName: newName.trim(),
-          playerUsername: cleanUsername,
-          initialPassword: newPassword,
-          playerAge: parseInt(newAge) || 8,
-          cpf: newCpf.replace(/\D/g, ''),
-          subscriptionTier: SubscriptionTier.PRO,
-          createdAt: new Date().toLocaleString('pt-BR'),
-        });
+        try {
+          const emailResult = await sendConfirmationEmail({
+            responsibleEmail: newEmail,
+            responsibleName: undefined,
+            playerName: newName.trim(),
+            playerUsername: cleanUsername,
+            initialPassword: newPassword,
+            playerAge: parseInt(newAge) || 8,
+            cpf: newCpf.replace(/\D/g, ''),
+            subscriptionTier: SubscriptionTier.PRO,
+            createdAt: new Date().toLocaleString('pt-BR'),
+          });
 
-        if (!emailResult.success) {
-          setFormError(`⚠️ Confirmação de cadastro criada, mas não foi possível enviar o e-mail: ${emailResult.message}`);
-          if ((emailResult as any).mailto) {
-            console.warn('[EmailService] Link mailto fallback:', (emailResult as any).mailto);
+          if (!emailResult.success) {
+            setFormError(`⚠️ Confirmação de cadastro criada, mas não foi possível enviar o e-mail: ${emailResult.message}`);
+            if ((emailResult as any).mailto) {
+              console.warn('[EmailService] Link mailto fallback:', (emailResult as any).mailto);
+            }
+          } else {
+            setFormSuccess(`${successMessage} ${emailResult.message}`);
           }
-        } else {
-          setFormSuccess(`${successMessage} ${emailResult.message}`);
+        } catch (emailErr: any) {
+          console.error('❌ Erro ao enviar e-mail de confirmação:', emailErr);
+          setFormError(`⚠️ Usuário criado, mas erro ao enviar e-mail: ${emailErr.message || 'Erro desconhecido'}`);
         }
 
         setNewName(''); setNewPassword(''); setNewAge('8'); setNewEmail(''); setNewCpf('');
         setShowForm(false);
-        await loadUsers();
+        
+        try {
+          await loadUsers();
+        } catch (loadErr: any) {
+          console.error('❌ Erro ao recarregar lista de usuários:', loadErr);
+          // Não mostra erro para o usuário, apenas log, pois o usuário já foi criado
+        }
       }
     } catch (catchErr: any) {
       console.error('❌ Exceção ao criar usuário:', {
