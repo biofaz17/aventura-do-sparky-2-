@@ -365,11 +365,25 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     setFormSuccess('');
     if (newName.trim().length < 3) { setFormError('Nome muito curto (mín. 3 caracteres).'); return; }
     if (newPassword.length < 4) { setFormError('Senha muito curta (mín. 4 caracteres).'); return; }
-    if (!newEmail.includes('@') || !newEmail.includes('.')) { setFormError('E-mail inválido.'); return; }
+    if (!newEmail.includes('@') || !newEmail.includes('.')) { setFormError('Email inválido.'); return; }
 
     if (!supabase || typeof supabase.from !== 'function') {
       setFormError('Supabase não configurado corretamente. Verifique VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.');
       return;
+    }
+
+    // Test if supabase is the proxy (not properly configured)
+    try {
+      const testCall = supabase.from('test');
+      if (typeof testCall === 'function') {
+        const testResult = await testCall();
+        if (testResult?.error?.message?.includes('Supabase não configurado')) {
+          setFormError('Supabase não configurado corretamente. Verifique VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.');
+          return;
+        }
+      }
+    } catch (e) {
+      // If test call throws, continue (might be real Supabase)
     }
 
     setSubmitting(true);
@@ -453,18 +467,12 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           }
         } catch (emailErr: any) {
           console.error('❌ Erro ao enviar e-mail de confirmação:', emailErr);
-          setFormError(`⚠️ Usuário criado, mas erro ao enviar e-mail: ${emailErr.message || 'Erro desconhecido'}`);
+          setFormError(`⚠️ Usuário criado, mas erro ao enviar e-mail: ${String(emailErr?.message || 'Erro desconhecido')}`);
         }
 
         setNewName(''); setNewPassword(''); setNewAge('8'); setNewEmail(''); setNewCpf('');
         setShowForm(false);
-        
-        try {
-          await loadUsers();
-        } catch (loadErr: any) {
-          console.error('❌ Erro ao recarregar lista de usuários:', loadErr);
-          // Não mostra erro para o usuário, apenas log, pois o usuário já foi criado
-        }
+        await loadUsers();
       }
     } catch (catchErr: any) {
       console.error('❌ Exceção ao criar usuário:', {
@@ -475,9 +483,10 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       });
       
       let errorMsg = '❌ Erro inesperado ao criar usuário.';
-      if (catchErr.message?.includes('fetch')) {
+      const catchErrText = String(catchErr?.message || catchErr?.details || 'Erro desconhecido');
+      if (catchErrText.toLowerCase().includes('fetch')) {
         errorMsg = '❌ Erro de conexão (fetch). Verifique internet e URL Supabase.';
-      } else if (catchErr.message?.includes('CORS')) {
+      } else if (catchErrText.toLowerCase().includes('cors')) {
         errorMsg = '❌ Erro CORS. Verifique configurações de domínio no Supabase.';
       }
       setFormError(errorMsg);
