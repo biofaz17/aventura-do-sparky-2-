@@ -144,9 +144,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       case 'PUT':
         // Update user
-        const { id: updateId, updates } = req.body;
+        let { id: updateId, updates, ...directUpdates } = req.body;
+        
+        // If 'updates' is not provided, use all other fields except 'id' as updates
+        if (!updates) {
+          updates = directUpdates;
+        }
 
-        if (!updateId || !updates) {
+        if (!updateId || Object.keys(updates).length === 0) {
           return res.status(400).json({ error: 'Missing id or updates' });
         }
 

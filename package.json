@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@google/genai": "^1.33.0",
-    "@supabase/supabase-js": "^2.95.3",
+    "@supabase/supabase-js": "^2.101.1",
     "canvas-confetti": "1.6.0",
     "framer-motion": "10.16.4",
     "lucide-react": "0.292.0",
