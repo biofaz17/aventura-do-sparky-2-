@@ -1,4 +1,16 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+// @ts-ignore - Vercel provides these types globally
+interface VercelRequest {
+  method: string;
+  body: any;
+  query: any;
+}
+
+interface VercelResponse {
+  status(code: number): VercelResponse;
+  json(data: any): VercelResponse;
+  setHeader(name: string, value: string): VercelResponse;
+  end(): void;
+}
 import { createClient } from '@supabase/supabase-js';
 
 // Try to get SERVICE_ROLE_KEY (production/Vercel)

@@ -5,8 +5,8 @@
  * Tests the /api/users endpoint to diagnose issues with user creation and loading
  */
 
-const https = require('https');
-const http = require('http');
+import https from 'https';
+import http from 'http';
 
 // Configuration - replace with your Vercel deployment URL
 const API_BASE_URL = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
