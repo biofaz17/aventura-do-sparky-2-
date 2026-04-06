@@ -310,6 +310,7 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [tab, setTab] = useState<'users' | 'sales' | 'dev'>('users');
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [formError, setFormError] = useState('');
