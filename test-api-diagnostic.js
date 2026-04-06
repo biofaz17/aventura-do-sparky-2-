@@ -14,7 +14,15 @@ const API_BASE_URL = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}
 console.log('🔍 Sparky Admin API Diagnostic Test');
 console.log('=====================================');
 console.log(`Testing API at: ${API_BASE_URL}`);
-console.log('');
+
+if (!process.env.VERCEL_URL) {
+  console.log('');
+  console.log('⚠️  VERCEL_URL environment variable not set!');
+  console.log('   Set it to your Vercel deployment URL:');
+  console.log('   export VERCEL_URL=your-app-name.vercel.app');
+  console.log('   Or run: VERCEL_URL=your-app-name.vercel.app node test-api-diagnostic.js');
+  console.log('');
+}
 
 async function testEndpoint(method, path, body = null) {
   return new Promise((resolve, reject) => {
