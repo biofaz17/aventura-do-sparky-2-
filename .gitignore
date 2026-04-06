@@ -47,3 +47,6 @@ Thumbs.db
 .vscode/launch.json
 .env.*.local
 sendgrid.env
+sendgrid.env
+
+.env
