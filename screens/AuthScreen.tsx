@@ -3,7 +3,7 @@ import { Button } from '../components/Button';
 import { UserProfile, SubscriptionTier } from '../types';
 import { User, Lock, Gamepad2, LogIn, Code, Sparkles, Star, ShieldCheck, Mail, Instagram, Info, X } from 'lucide-react';
 import { SparkyLogo } from '../components/SparkyLogo';
-import { supabase } from '../services/supabase';
+import { userService } from '../services/userService';
 
 interface AuthScreenProps {
   onLogin: (user: UserProfile) => void;
@@ -55,16 +55,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onAdminAccess }
     if (!foundUser) {
         try {
             const cleanUsername = name.toLowerCase().trim().replace(/\s+/g, '');
-            const { data, error: dbError } = await supabase
-                .from('users')
-                .select('profile_data, password')
-                .eq('username', cleanUsername)
-                .single();
+            const data = await userService.getUserByUsername(cleanUsername);
             
-            if (dbError || !data) {
-                setError(dbError?.message?.includes('não configurado')
-                   ? 'O modo online (nuvem) está offline. Crie a conta ou tente novamente mais tarde.' 
-                   : 'Usuário não localizado no sistema. Verifique o nome digitado.');
+            if (!data) {
+                setError('Usuário não localizado no sistema. Verifique o nome digitado.');
                 setLoading(false);
                 return;
             }

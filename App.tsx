@@ -14,10 +14,9 @@ import { ParentGate } from './components/ParentGate';
 import { SubscriptionModal } from './components/SubscriptionModal';
 import { MarketingModal } from './components/MarketingModal';
 import { Mail, Loader2, ShieldCheck, AlertCircle } from 'lucide-react';
-import SupabaseTest from './components/SupabaseTest';
 import { AdminPanel } from './screens/AdminPanel';
 import { HomeScreen } from './screens/HomeScreen';
-import { supabase } from './services/supabase';
+import { userService } from './services/userService';
 
 // Enhanced Toast Notification
 const NotificationToast = ({ msg, subMsg, show }: { msg: string, subMsg?: string, show: boolean }) => (
@@ -131,22 +130,17 @@ export default function App() {
           const delay = 3000; // 3 segundos entre tentativas
 
           const checkSubscription = async () => {
-              const { data, error } = await supabase
-                  .from('profiles')
-                  .select('subscription')
-                  .eq('id', user?.id)
-                  .single();
-
-              if (error) throw error;
-              return data.subscription !== SubscriptionTier.FREE;
+              const subStatus = await userService.checkSubscription(user?.id || '');
+              return subStatus !== SubscriptionTier.FREE;
           };
 
           const poll = async () => {
               const isUpdated = await checkSubscription();
               if (isUpdated) {
                   // Sucesso! O Webhook já processou.
-                  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user?.id).single();
-                  setUser(profile as UserProfile);
+                  const data = await userService.getUserByUsername(user?.username || '');
+                  const profile = data?.profile_data as UserProfile;
+                  if (profile) setUser(profile);
                   setScreen(Screen.PAYMENT_SUCCESS);
                   window.history.replaceState({}, document.title, window.location.pathname);
               } else if (attempts < maxAttempts) {
@@ -226,7 +220,6 @@ export default function App() {
 
       // --- PARENT NOTIFICATION LOGIC ---
       if (!user.isGuest) {
-        console.log(`[SERVICE] Sending progress report to ${user.parentEmail}...`);
         // Only show toast occasionally or for big milestones to not annoy
         if (user.progress.stars % 5 === 0) {
           showNotification(
