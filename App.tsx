@@ -99,21 +99,49 @@ export default function App() {
   // PAYMENT RETURN HANDLER (Mercado Pago Redirects)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    
+    // Novo formato de URL: ?payment_status=success|failure|pending
+    const paymentStatus = params.get('payment_status');
+    
+    // Formato antigo do Mercado Pago (mantido por compatibilidade)
     let paymentId = params.get('payment_id') || params.get('collection_id');
     let status = params.get('collection_status') || params.get('status');
-
-    // Mercado Pago as vezes retorna a literal string "null"
     if (paymentId === 'null') paymentId = null;
     if (status === 'null') status = null;
 
-    // Se voltamos do MP com sucesso, precisamos verificar se o pagamento é real
+    // Limpar URL imediatamente para não reprocessar
+    const hasPaymentParams = paymentStatus || paymentId || 
+                             window.location.search.includes('preference_id');
+    if (hasPaymentParams) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    // Pagamento aprovado (novo formato)
+    if (paymentStatus === 'success') {
+      if (user && screen !== Screen.PAYMENT_SUCCESS) {
+        verifyPayment('mp_approved');
+      } else if (!user) {
+        // Usuário ainda não logado: salva flag e redireciona para login
+        sessionStorage.setItem('pending_payment_confirmation', 'true');
+        setScreen(Screen.AUTH);
+        showNotification("Pagamento Aprovado! 🎉", "Faça login para ativar seu plano.");
+      }
+      return;
+    }
+
+    // Pagamento com falha (novo formato)
+    if (paymentStatus === 'failure' || paymentStatus === 'pending') {
+      showNotification(
+        paymentStatus === 'pending' ? "Pagamento Pendente" : "Pagamento não concluído",
+        "Se desejar, você pode tentar o checkout novamente."
+      );
+      if (user) setScreen(Screen.DASHBOARD);
+      return;
+    }
+
+    // Formato antigo: pagamento com ID real
     if (paymentId && user && screen !== Screen.VERIFYING && screen !== Screen.PAYMENT_SUCCESS) {
-        verifyPayment(paymentId);
-    } else if ((status === 'failure' || status === 'null') && window.location.search.includes('status')) {
-        // Se falhou ou o usuário desistiu, voltamos ao painel limpo
-        window.history.replaceState({}, document.title, window.location.pathname);
-        setScreen(Screen.DASHBOARD);
-        showNotification("Pagamento não concluído", "Se desejar, você pode tentar o checkout novamente a qualquer momento.");
+      verifyPayment(paymentId);
     }
   }, [user]);
 
