@@ -176,14 +176,20 @@ export default function App() {
 
   const handleUpdateProfile = (updatedUser: UserProfile) => {
     setUser(updatedUser);
+    if (updatedUser && !updatedUser.isGuest) {
+      userService.updateUser(updatedUser.id, { profile_data: updatedUser })
+        .then(() => showNotification("Perfil Atualizado", "As alterações foram salvas na nuvem."))
+        .catch(err => console.error("Erro ao salvar perfil:", err));
+    }
   };
 
   const handleUpdateSkin = (skinId: string) => {
     if (!user) return;
-    setUser({
+    const updatedUser = {
       ...user,
       activeSkin: skinId
-    });
+    };
+    handleUpdateProfile(updatedUser);
     showNotification("Novo Visual!", "Sua skin foi atualizada com sucesso.");
   };
 
@@ -218,8 +224,12 @@ export default function App() {
       };
       setUser(updatedUser);
 
-      // --- PARENT NOTIFICATION LOGIC ---
+      // --- PERSISTENCE LOGIC (Cloud) ---
       if (!user.isGuest) {
+        console.log(`[SERVICE] Persisting progress for ${user.id} to cloud...`);
+        userService.updateUser(user.id, { profile_data: updatedUser })
+          .catch(err => console.error('Failed to persist progress:', err));
+        
         // Only show toast occasionally or for big milestones to not annoy
         if (user.progress.stars % 5 === 0) {
           showNotification(

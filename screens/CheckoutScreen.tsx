@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { SubscriptionTier, UserProfile } from '../types';
 import { PLANS } from '../constants';
 import { ArrowLeft, Loader2, Lock, CheckCircle, Store, AlertTriangle, User, Mail, FileText, ArrowRight, ShieldCheck, Building2 } from 'lucide-react';
-import { supabase } from '../services/supabase';
 
 interface CheckoutScreenProps {
   user: UserProfile;
@@ -114,13 +113,13 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({ user, tier, onCo
       const safeName = payerName.trim();
       const safeDoc = payerDoc.trim();
 
-      const { data: { session } } = await supabase.auth.getSession();
+      // Replaced direct Supabase Edge Function call with local API for security and stability
+      // No more dependency on supabase.auth.getSession() which was failing due to null client
       
-      const response = await fetch('https://aluzklqouexuruppwumz.supabase.co/functions/v1/create_preference', {
+      const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`
         },
         body: JSON.stringify({
           planId: tier,

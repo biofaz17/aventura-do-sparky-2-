@@ -108,6 +108,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           lastActive: Date.now(),
         };
 
+        // Create user in 'users' table (credentials and main record)
         const { data: newUser, error: insertError } = await supabase
           .from('users')
           .insert([{
@@ -117,16 +118,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             cpf: cpf?.replace(/\D/g, ''),
             parent_email,
             profile_data: profileData,
+            last_active: Date.now()
           }])
           .select()
           .single();
 
         if (insertError) {
-          console.error('Error creating user:', insertError);
+          console.error('Error creating user in "users" table:', insertError);
           return res.status(500).json({
-            error: 'Failed to create user',
+            error: 'Failed to create user record',
             details: insertError.message
           });
+        }
+
+        // ALSO Create in 'profiles' table for compatibility with other parts of the app
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([{
+            id: userId,
+            name: name.trim(),
+            password,
+            parent_email,
+            age: parseInt(age) || 8,
+            subscription: subscription,
+            progress: profileData.progress,
+            settings: profileData.settings,
+            last_active: new Date().toISOString()
+          }]);
+
+        if (profileError) {
+          console.warn('⚠️ User created in "users" but failed in "profiles":', profileError.message);
+          // We don't return error here because the main record was created
         }
 
         return res.status(201).json({ user: newUser });
@@ -175,11 +197,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           .single();
 
         if (updateError) {
-          console.error('Error updating user:', updateError);
+          console.error('Error updating user in "users" table:', updateError);
           return res.status(500).json({
             error: 'Failed to update user',
             details: updateError.message
           });
+        }
+
+        // --- SYNC WITH PROFILES TABLE ---
+        try {
+          // If profile_data was updated, we should update the profiles table too
+          if (updates.profile_data) {
+            const p = updates.profile_data;
+            await supabase
+              .from('profiles')
+              .update({
+                name: p.name,
+                age: p.age,
+                subscription: p.subscription,
+                progress: p.progress,
+                settings: p.settings,
+                last_active: new Date().toISOString()
+              })
+              .eq('id', updateId);
+          } else {
+            // Update individual fields if they were passed
+            const profileUpdates: any = {};
+            if (updates.password) profileUpdates.password = updates.password;
+            if (updates.parent_email) profileUpdates.parent_email = updates.parent_email;
+            
+            if (Object.keys(profileUpdates).length > 0) {
+              await supabase.from('profiles').update(profileUpdates).eq('id', updateId);
+            }
+          }
+        } catch (syncErr) {
+          console.warn('⚠️ Sync update to "profiles" failed (non-critical):', syncErr);
         }
 
         return res.status(200).json({ user: updatedUser });
