@@ -524,12 +524,12 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
       const data = await response.json();
 
-      if (Array.isArray(data)) {
+      if (data && Array.isArray(data.users)) {
         console.log('✅ Teste de diagnóstico bem-sucedido!');
         setTestStatus('success');
-        setTestMessage(`✅ API OK! Encontrados ${data.length} usuários.`);
+        setTestMessage(`✅ API OK! Encontrados ${data.users.length} usuários.`);
       } else {
-        throw new Error('Resposta inesperada da API');
+        throw new Error('Resposta inesperada da API (Esperado array em data.users). Response: ' + JSON.stringify(data));
       }
     } catch (err: any) {
       console.error('❌ Erro no diagnóstico:', err);
