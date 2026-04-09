@@ -113,13 +113,12 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({ user, tier, onCo
       const safeName = payerName.trim();
       const safeDoc = payerDoc.trim();
 
-      // Replaced direct Supabase Edge Function call with local API for security and stability
-      // No more dependency on supabase.auth.getSession() which was failing due to null client
-      
-      const response = await fetch('/api/checkout', {
+      // Chamada direta para a Edge Function do Supabase (ignora problemas de proxy local)
+      // Esta função não exige JWT (verify_jwt: false), então funciona sem sessão
+      const response = await fetch('https://aluzklqouexuruppwumz.supabase.co/functions/v1/create_preference', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           planId: tier,
@@ -130,7 +129,14 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({ user, tier, onCo
         })
       });
 
-      const data = await response.json();
+      // Melhoria na captura de erros de resposta
+      const responseText = await response.text();
+      let data;
+      try {
+        data = responseText ? JSON.parse(responseText) : {};
+      } catch (e) {
+        throw new Error('Resposta inválida do servidor de pagamento.');
+      }
 
       if (!response.ok) {
         throw new Error(data.error || data.message || 'Erro ao gerar o link de pagamento');
