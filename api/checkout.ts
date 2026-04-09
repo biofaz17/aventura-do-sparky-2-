@@ -1,5 +1,4 @@
-
-// @ts-ignore - Vercel provides these types globally
+// @ts-ignore - Definindo tipos básicos para compatibilidade sem @vercel/node
 interface VercelRequest {
   method: string;
   body: any;
