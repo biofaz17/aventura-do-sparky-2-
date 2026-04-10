@@ -113,9 +113,9 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({ user, tier, onCo
       const safeName = payerName.trim();
       const safeDoc = payerDoc.trim();
 
-      // Chamada direta para a Edge Function do Supabase (ignora problemas de proxy local)
-      // Esta função não exige JWT (verify_jwt: false), então funciona sem sessão
-      const response = await fetch('https://aluzklqouexuruppwumz.supabase.co/functions/v1/create_preference', {
+      // SECURITY: Proxy request through local backend API to hide Supabase infrastructure
+      // This uses /api/checkout which then calls Supabase with the SERVICE_ROLE_KEY
+      const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

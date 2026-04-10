@@ -12,6 +12,10 @@ interface VercelResponse {
   end(): void;
 }
 import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+
+// Load .env files for local development
+dotenv.config();
 
 // Try to get SERVICE_ROLE_KEY (production/Vercel)
 let supabaseUrl = process.env.SUPABASE_URL;
@@ -44,8 +48,9 @@ interface UserRecord {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!supabase) {
+    console.error('CRITICAL: Supabase keys missing in environment variables.');
     return res.status(500).json({
-      error: 'Supabase not configured. Check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY environment variables.'
+      error: 'Core service initialization failed. Please contact the system administrator.'
     });
   }
 

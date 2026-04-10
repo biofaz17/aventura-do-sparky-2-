@@ -20,6 +20,9 @@ interface SendEmailRequest {
   html: string;
 }
 
+import dotenv from 'dotenv';
+dotenv.config();
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
@@ -35,8 +38,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const sendgridFrom = process.env.SENDGRID_FROM;
 
   if (!sendgridApiKey || !sendgridFrom) {
+    console.error('CRITICAL: Email service configuration missing (SENDGRID_API_KEY/SENDGRID_FROM).');
     return res.status(500).json({
-      error: 'Email service is not configured. Set SENDGRID_API_KEY and SENDGRID_FROM in your environment.'
+      error: 'Serviço de e-mail temporariamente indisponível. Por favor, tente novamente mais tarde.'
     });
   }
 

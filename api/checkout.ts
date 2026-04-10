@@ -12,6 +12,9 @@ interface VercelResponse {
   end(): void;
 }
 
+import dotenv from 'dotenv';
+dotenv.config();
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Add CORS headers to allow cross-origin requests
   res.setHeader('Access-Control-Allow-Origin', '*');
