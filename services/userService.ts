@@ -34,9 +34,38 @@ export const userService = {
     const response = await fetch('/api/users', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: userId, updates }),
+      body: JSON.stringify({ id: userId, ...updates }), // Spread updates to match API expectation
     });
     if (!response.ok) throw new Error('Failed to update user');
+    return await response.json();
+  },
+
+  /**
+   * Creates a new user
+   */
+  async createUser(userData: any): Promise<any> {
+    const response = await fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData),
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to create user');
+    }
+    return await response.json();
+  },
+
+  /**
+   * Deletes a user
+   */
+  async deleteUser(userId: string): Promise<any> {
+    const response = await fetch('/api/users', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: userId }),
+    });
+    if (!response.ok) throw new Error('Failed to delete user');
     return await response.json();
   },
 
