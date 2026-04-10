@@ -146,8 +146,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         if (insertError) {
           console.error('Error creating user in "users" table:', insertError);
+          let errorMsg = 'Failed to create user record';
+          
+          // Check for duplicate key error (username or ID)
+          if (insertError.code === '23505') {
+            errorMsg = 'Este nome de usuário já está em uso por outro explorador.';
+          }
+          
           return res.status(500).json({
-            error: 'Failed to create user record',
+            error: errorMsg,
             details: insertError.message
           });
         }
@@ -187,26 +194,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Update user
         let { id: updateId, updates, ...directUpdates } = req.body;
         
-        // If 'updates' is not provided, use all other fields except 'id' as updates
-        if (!updates) {
-          updates = directUpdates;
+        // Merge updates from possible 'updates' object or direct fields
+        const sourceData = { ...(updates || {}), ...directUpdates };
+
+        if (!updateId || Object.keys(sourceData).length === 0) {
+          return res.status(400).json({ error: 'Missing id or updates' });
         }
 
-        if (!updateId || Object.keys(updates).length === 0) {
-          return res.status(400).json({ error: 'Missing id or updates' });
+        // Sanitize to only allow valid columns
+        const allowedColumns = ['username', 'password', 'cpf', 'parent_email', 'profile_data', 'last_active'];
+        const sanitizedUpdates: any = {};
+        
+        for (const key of allowedColumns) {
+          if (sourceData[key] !== undefined) {
+            sanitizedUpdates[key] = sourceData[key];
+          }
         }
 
         const { data: updatedUser, error: updateError } = await supabase
           .from('users')
-          .update(updates)
+          .update(sanitizedUpdates)
           .eq('id', updateId)
           .select()
           .single();
 
         if (updateError) {
           console.error('Error updating user in "users" table:', updateError);
+          let errorMsg = 'Failed to update user';
+          if (updateError.code === '23505') errorMsg = 'Este nome de usuário já está em uso.';
+          
           return res.status(500).json({
-            error: 'Failed to update user',
+            error: errorMsg,
             details: updateError.message
           });
         }
