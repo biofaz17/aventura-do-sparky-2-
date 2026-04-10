@@ -1,5 +1,5 @@
-
 import { UserProfile } from '../types';
+import { ADMIN_PIN } from '../constants';
 
 /**
  * Service to handle user-related API calls to the backend.
@@ -10,7 +10,9 @@ export const userService = {
    * Fetches all users (Admin only)
    */
   async getAllUsers(): Promise<any[]> {
-    const response = await fetch('/api/users');
+    const response = await fetch('/api/users', {
+      headers: { 'x-admin-pin': ADMIN_PIN }
+    });
     if (!response.ok) throw new Error('Failed to fetch users');
     const data = await response.json();
     return data.users || [];
@@ -33,7 +35,10 @@ export const userService = {
   async updateUser(userId: string, updates: any): Promise<any> {
     const response = await fetch('/api/users', {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-admin-pin': ADMIN_PIN
+      },
       body: JSON.stringify({ id: userId, ...updates }), // Spread updates to match API expectation
     });
     if (!response.ok) throw new Error('Failed to update user');
@@ -46,7 +51,10 @@ export const userService = {
   async createUser(userData: any): Promise<any> {
     const response = await fetch('/api/users', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-admin-pin': ADMIN_PIN
+      },
       body: JSON.stringify(userData),
     });
     if (!response.ok) {
@@ -62,7 +70,10 @@ export const userService = {
   async deleteUser(userId: string): Promise<any> {
     const response = await fetch('/api/users', {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-admin-pin': ADMIN_PIN
+      },
       body: JSON.stringify({ id: userId }),
     });
     if (!response.ok) throw new Error('Failed to delete user');
@@ -73,7 +84,9 @@ export const userService = {
    * Checks subscription status for a user
    */
   async checkSubscription(userId: string): Promise<string> {
-    const response = await fetch(`/api/users`);
+    const response = await fetch(`/api/users`, {
+      headers: { 'x-admin-pin': ADMIN_PIN }
+    });
     if (!response.ok) throw new Error('Failed to check subscription');
     const data = await response.json();
     const user = (data.users || []).find((u: any) => u.id === userId);

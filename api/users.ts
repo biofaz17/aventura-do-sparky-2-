@@ -63,7 +63,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).end();
   }
 
-  const { method } = req;
+  const { method, headers, query } = req;
+  const adminPin = headers['x-admin-pin'];
+  const systemAdminPin = process.env.ADMIN_PIN || '031415';
+
+  // Security Check: Protect sensitive operations
+  // GET with username filter is allowed for login functionality.
+  // All other operations require the Admin PIN.
+  const isSensitiveOp = method !== 'GET' || !query.username;
+  
+  if (isSensitiveOp && adminPin !== systemAdminPin) {
+    console.warn(`[SECURITY] Unauthorized ${method} attempt to /api/users from ${headers['x-forwarded-for'] || 'unknown'}`);
+    return res.status(401).json({ error: 'Acesso restrito. PIN administrativo inválido ou ausente.' });
+  }
 
   try {
     switch (method) {
