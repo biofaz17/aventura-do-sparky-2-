@@ -20,11 +20,11 @@ export const userService = {
    * Fetches a single user by username (for login)
    */
   async getUserByUsername(username: string): Promise<any | null> {
-    const response = await fetch(`/api/users`);
-    if (!response.ok) throw new Error('Failed to fetch users for login');
+    const response = await fetch(`/api/users?username=${encodeURIComponent(username)}`);
+    if (!response.ok) throw new Error('Failed to fetch user for login');
     const data = await response.json();
     const users = data.users || [];
-    return users.find((u: any) => u.username === username) || null;
+    return users.length > 0 ? users[0] : null;
   },
 
   /**

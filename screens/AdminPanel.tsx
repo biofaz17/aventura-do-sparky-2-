@@ -370,6 +370,15 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
   const [testMessage, setTestMessage] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [logs, setLogs] = useState<string[]>([
+    `[${new Date().toLocaleTimeString()}] HQ Session Initialized via Secure Hash Route`,
+    `[${new Date().toLocaleTimeString()}] Environment keys validated for Vercel deployment`,
+  ]);
+
+  const addLog = (msg: string, type: 'INFO' | 'ERR' | 'WARN' = 'INFO') => {
+    const time = new Date().toLocaleTimeString();
+    setLogs(prev => [`[${time}] [${type}] ${msg}`, ...prev].slice(0, 15));
+  };
 
   // Form fields
   const [newName, setNewName] = useState('');
@@ -387,11 +396,37 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     try {
       const allUsers = await userService.getAllUsers();
       setUsers(allUsers);
+      addLog(`Fetched ${allUsers.length} profiles from database`, 'INFO');
     } catch (err: any) {
       toast.error('Erro de conexão ao portal: ' + err.message);
+      addLog(`Failed to fetch profiles: ${err.message}`, 'ERR');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleExportCSV = () => {
+    const headers = ['Username', 'Email', 'Subscription', 'Created At'];
+    const rows = filteredUsers.map(u => [
+      u.username,
+      u.parent_email || '',
+      u.profile_data?.subscription || 'FREE',
+      u.created_at || ''
+    ]);
+    
+    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `exploradores_sparky_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success('Relatório CSV gerado!');
+    addLog('System report exported to CSV', 'INFO');
   };
 
   const handleCopyCredentials = (u: UserRecord) => {
@@ -722,6 +757,10 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                       {showForm ? 'Fechar' : 'Novo Explorador'}
                     </button>
                     
+                    <button onClick={handleExportCSV} className="bg-slate-900 border border-slate-800 p-3 rounded-2xl hover:bg-slate-800 transition-colors text-slate-500 hover:text-blue-400" title="Exportar CSV">
+                      <Copy size={18} />
+                    </button>
+
                     <button onClick={loadUsers} className="bg-slate-900 border border-slate-800 p-3 rounded-2xl hover:bg-slate-800 transition-colors" title="Sincronizar">
                       <RefreshCw size={18} className={`${loading ? 'animate-spin text-emerald-500' : 'text-slate-500'}`} />
                     </button>
@@ -1094,13 +1133,24 @@ export const AdminPanel: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                   </div>
                 </div>
 
-                <div className="bg-black/80 p-8 rounded-[2.5rem] border border-slate-800/80 font-mono text-[11px] text-emerald-500/80 shadow-inner relative group">
-                  <div className="absolute top-4 right-6 text-[9px] text-slate-700 font-black uppercase tracking-[0.4em]">Node-Sparky-Engine</div>
-                  <div className="space-y-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
-                    <p><span className="text-blue-500">[{new Date().toISOString()}]</span> <span className="text-emerald-500 font-bold">[BOOT-INFO]</span> HQ Session Initialized via Secure Hash Route</p>
-                    <p><span className="text-blue-500">[{new Date().toISOString()}]</span> <span className="text-emerald-500 font-bold">[DB-LOG]</span> Fetched {statsData.total} profiles with internal RLS policies satisfied</p>
-                    <p><span className="text-blue-500">[{new Date().toISOString()}]</span> <span className="text-emerald-500 font-bold">[SEC-LOG]</span> Environment keys validated for Vercel/Production deployment</p>
-                    <p className="animate-pulse text-emerald-400">&gt;_ Listening for events...</p>
+                <div className="bg-black/95 p-8 rounded-[2.5rem] border border-slate-800/80 font-mono text-[11px] text-emerald-500/80 shadow-2xl relative group min-h-[220px] flex flex-col justify-end">
+                  <div className="absolute top-4 left-8 text-[9px] text-emerald-500/40 font-black uppercase tracking-[0.4em] flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    LIVE SYSTEM LOGS
+                  </div>
+                  <div className="absolute top-4 right-8 text-[9px] text-slate-700 font-black uppercase tracking-[0.4em]">Node-Sparky-Engine</div>
+                  
+                  <div className="space-y-1.5 overflow-hidden flex flex-col-reverse">
+                    <p className="animate-pulse text-emerald-400 flex items-center gap-2 mt-2">
+                      <span className="text-slate-700">&gt;</span> Listening for events... 
+                      <span className="w-1 h-3 bg-emerald-500 inline-block animate-[blink_1s_infinite]" />
+                    </p>
+                    {logs.map((log, i) => (
+                      <p key={i} className={`opacity-${Math.max(20, 100 - i * 15)}`}>
+                        <span className="text-blue-500/60 mr-2">LOG</span>
+                        {log}
+                      </p>
+                    ))}
                   </div>
                 </div>
               </div>

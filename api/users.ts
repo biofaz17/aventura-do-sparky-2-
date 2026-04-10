@@ -68,14 +68,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     switch (method) {
       case 'GET':
-        // List users
-        const { data: users, error: selectError } = await supabase
-          .from('users')
-          .select('*')
-          .order('created_at', { ascending: false });
+        // Fetch all users or one by username
+        const { username } = req.query;
+        let query = supabase.from('users').select('*');
+        
+        if (username) {
+          query = query.eq('username', username as string);
+        }
+        
+        const { data: users, error: fetchError } = await query.order('created_at', { ascending: false });
 
-        if (selectError) {
-          console.error('Error fetching users:', selectError);
+        if (fetchError) {
+          console.error('Error fetching users:', fetchError);
           return res.status(500).json({ error: 'Failed to fetch users' });
         }
 
@@ -136,27 +140,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           });
         }
 
-        // ALSO Create in 'profiles' table for compatibility with other parts of the app
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([{
-            id: userId,
-            name: name.trim(),
-            password,
-            parent_email,
-            age: parseInt(age) || 8,
-            subscription: subscription,
-            progress: profileData.progress,
-            settings: profileData.settings,
-            last_active: new Date().toISOString()
-          }]);
-
-        if (profileError) {
-          console.warn('⚠️ User created in "users" but failed in "profiles":', profileError.message);
-          // We don't return error here because the main record was created
-        }
-
-        return res.status(201).json({ user: newUser });
+        // Note: Synchronization with the 'profiles' table is now handled automatically
+        // by a database trigger (tr_sync_user_to_profile) for maximum reliability.
+        
+        return res.status(201).json({
+          message: 'User created successfully',
+          user: newUser
+        });
 
       case 'DELETE':
         // Delete user
@@ -209,37 +199,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           });
         }
 
-        // --- SYNC WITH PROFILES TABLE ---
-        try {
-          // If profile_data was updated, we should update the profiles table too
-          if (updates.profile_data) {
-            const p = updates.profile_data;
-            await supabase
-              .from('profiles')
-              .update({
-                name: p.name,
-                age: p.age,
-                subscription: p.subscription,
-                progress: p.progress,
-                settings: p.settings,
-                last_active: new Date().toISOString()
-              })
-              .eq('id', updateId);
-          } else {
-            // Update individual fields if they were passed
-            const profileUpdates: any = {};
-            if (updates.password) profileUpdates.password = updates.password;
-            if (updates.parent_email) profileUpdates.parent_email = updates.parent_email;
-            
-            if (Object.keys(profileUpdates).length > 0) {
-              await supabase.from('profiles').update(profileUpdates).eq('id', updateId);
-            }
-          }
-        } catch (syncErr) {
-          console.warn('⚠️ Sync update to "profiles" failed (non-critical):', syncErr);
-        }
+        // Note: Synchronization with the 'profiles' table is now handled automatically
+        // by a database trigger in the database for maximum consistency.
 
-        return res.status(200).json({ user: updatedUser });
+        return res.status(200).json({ 
+          message: 'User updated successfully',
+          user: updatedUser 
+        });
 
       default:
         return res.status(405).json({ error: 'Method not allowed' });
