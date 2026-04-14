@@ -49,8 +49,12 @@ interface UserRecord {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!supabase) {
     console.error('CRITICAL: Supabase keys missing in environment variables.');
+    const missing = [];
+    if (!process.env.SUPABASE_URL) missing.push('SUPABASE_URL');
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY && !process.env.SUPABASE_ANON_KEY) missing.push('SUPABASE_SERVICE_ROLE_KEY/ANON_KEY');
+    
     return res.status(500).json({
-      error: 'Core service initialization failed. Please contact the system administrator.'
+      error: `Core service initialization failed. Missing variables: ${missing.join(', ')}. Please check Vercel settings.`
     });
   }
 
