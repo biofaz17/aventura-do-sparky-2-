@@ -1,5 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { AuthScreen } from './screens/AuthScreen';
 import { LevelMap } from './screens/LevelMap';
 import { GameScreen } from './screens/GameScreen';
@@ -18,6 +18,12 @@ import { AdminPanel } from './screens/AdminPanel';
 import { HomeScreen } from './screens/HomeScreen';
 import { userService } from './services/userService';
 
+// Protected Route Component
+const PrivateRoute = ({ children, user }: { children: React.ReactNode, user: UserProfile | null }) => {
+  if (!user) return <Navigate to="/auth" replace />;
+  return <>{children}</>;
+};
+
 // Enhanced Toast Notification
 const NotificationToast = ({ msg, subMsg, show }: { msg: string, subMsg?: string, show: boolean }) => (
   <div className={`fixed top-4 right-4 bg-white border-l-4 border-green-500 text-slate-800 px-6 py-4 rounded-r-xl shadow-2xl z-[100] transition-transform duration-500 ${show ? 'translate-x-0' : 'translate-x-full'}`}>
@@ -33,23 +39,10 @@ const NotificationToast = ({ msg, subMsg, show }: { msg: string, subMsg?: string
   </div>
 );
 
-enum Screen {
-  HOME,
-  AUTH,
-  DASHBOARD,
-  MAP,
-  GAME,
-  PARENTS,
-  ADMIN,
-  CHECKOUT,
-  PAYMENT_SUCCESS,
-  VERIFYING
-}
 
 export default function App() {
-  const [screen, setScreen] = useState<Screen>(
-    window.location.hash === '#/admin' ? Screen.ADMIN : Screen.HOME
-  );
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // User State
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -65,16 +58,7 @@ export default function App() {
   // Payment Flow State
   const [pendingSubscriptionTier, setPendingSubscriptionTier] = useState<SubscriptionTier | null>(null);
 
-  // Listener de URL Hash para acesso direto ao painel admin via /#/admin
-  useEffect(() => {
-    const handleHash = () => {
-      if (window.location.hash === '#/admin') {
-        setScreen(Screen.ADMIN);
-      }
-    };
-    window.addEventListener('hashchange', handleHash);
-    return () => window.removeEventListener('hashchange', handleHash);
-  }, []);
+  // Listener de hash removido - usando rotas reais agora
 
   // O Flow de Pagamento foi movido para fora do app (Hotmart)
 
@@ -98,32 +82,27 @@ export default function App() {
 
   // PAYMENT RETURN HANDLER (Mercado Pago Redirects)
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    
     // Novo formato de URL: ?payment_status=success|failure|pending
-    const paymentStatus = params.get('payment_status');
+    const paymentStatus = searchParams.get('payment_status');
     
     // Formato antigo do Mercado Pago (mantido por compatibilidade)
-    let paymentId = params.get('payment_id') || params.get('collection_id');
-    let status = params.get('collection_status') || params.get('status');
+    let paymentId = searchParams.get('payment_id') || searchParams.get('collection_id');
+    let status = searchParams.get('collection_status') || searchParams.get('status');
     if (paymentId === 'null') paymentId = null;
     if (status === 'null') status = null;
 
-    // Limpar URL imediatamente para não reprocessar
+    // Limpar URL via React Router se necessário
     const hasPaymentParams = paymentStatus || paymentId || 
                              window.location.search.includes('preference_id');
-    if (hasPaymentParams) {
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
 
     // Pagamento aprovado (novo formato)
     if (paymentStatus === 'success') {
-      if (user && screen !== Screen.PAYMENT_SUCCESS) {
+      if (user) {
         verifyPayment('mp_approved');
-      } else if (!user) {
+      } else {
         // Usuário ainda não logado: salva flag e redireciona para login
         sessionStorage.setItem('pending_payment_confirmation', 'true');
-        setScreen(Screen.AUTH);
+        navigate('/auth');
         showNotification("Pagamento Aprovado! 🎉", "Faça login para ativar seu plano.");
       }
       return;
@@ -135,18 +114,18 @@ export default function App() {
         paymentStatus === 'pending' ? "Pagamento Pendente" : "Pagamento não concluído",
         "Se desejar, você pode tentar o checkout novamente."
       );
-      if (user) setScreen(Screen.DASHBOARD);
+      if (user) navigate('/dashboard');
       return;
     }
 
     // Formato antigo: pagamento com ID real
-    if (paymentId && user && screen !== Screen.VERIFYING && screen !== Screen.PAYMENT_SUCCESS) {
+    if (paymentId && user) {
       verifyPayment(paymentId);
     }
-  }, [user]);
+  }, [user, searchParams]);
 
   const verifyPayment = async (paymentId: string) => {
-      setScreen(Screen.VERIFYING);
+      navigate('/verifying');
       
       try {
           // Em vez de chamar a API do Mercado Pago diretamente (que expõe o Token),
@@ -169,16 +148,14 @@ export default function App() {
                   const data = await userService.getUserByUsername(user?.username || '');
                   const profile = data?.profile_data as UserProfile;
                   if (profile) setUser(profile);
-                  setScreen(Screen.PAYMENT_SUCCESS);
-                  window.history.replaceState({}, document.title, window.location.pathname);
+                  navigate('/success');
               } else if (attempts < maxAttempts) {
                   attempts++;
                   setTimeout(poll, delay);
               } else {
                   // Tempo esgotado
-                  setScreen(Screen.DASHBOARD);
+                  navigate('/dashboard');
                   showNotification("Processando Pagamento", "Seu pagamento foi recebido e está sendo processado. Seu acesso será liberado em instantes.");
-                  window.history.replaceState({}, document.title, window.location.pathname);
               }
           };
 
@@ -186,20 +163,19 @@ export default function App() {
 
       } catch (error) {
           console.error("Erro na verificação de pagamento:", error);
-          setScreen(Screen.DASHBOARD);
+          navigate('/dashboard');
           alert("Erro técnico ao verificar pagamento. Se você pagou, entre em contato com o suporte.");
-          window.history.replaceState({}, document.title, window.location.pathname);
       }
   };
 
   const handleLogin = (profile: UserProfile) => {
     setUser(profile);
-    setScreen(Screen.DASHBOARD);
+    navigate('/dashboard');
   };
 
   const handleLogout = () => {
     setUser(null);
-    setScreen(Screen.AUTH);
+    navigate('/auth');
   };
 
   const handleUpdateProfile = (updatedUser: UserProfile) => {
@@ -286,9 +262,9 @@ export default function App() {
       // FLUXO PADRÃO (Sem Marketing)
       if (nextLevelId !== currentLevelId) {
         // O fluxo padrão leva ao Mapa para mostrar o progresso visual
-        setScreen(Screen.MAP);
+        navigate('/mapa');
       } else {
-        setScreen(Screen.DASHBOARD);
+        navigate('/dashboard');
         alert("Você completou esta etapa! Confira os próximos desafios no mapa.");
       }
     } else {
@@ -299,7 +275,7 @@ export default function App() {
         totalBlocksUsed: user.progress.totalBlocksUsed + blocksUsed
       };
       setUser({ ...user, progress: newProgress, lastActive: Date.now() });
-      setScreen(Screen.DASHBOARD);
+      navigate('/dashboard');
     }
   };
 
@@ -307,7 +283,7 @@ export default function App() {
     setShowMarketingModal(false);
     // Redireciona DIRETAMENTE para o próximo nível (Screen.GAME), conforme solicitado.
     // O currentLevelId já foi atualizado em handleLevelComplete antes do modal abrir.
-    setScreen(Screen.GAME);
+    navigate('/jogo');
   };
 
   const handleMarketingUpgrade = () => {
@@ -326,7 +302,7 @@ export default function App() {
     if (gateAction === 'upgrade') {
       setShowSubscriptionModal(true);
     } else if (gateAction === 'parents_area') {
-      setScreen(Screen.PARENTS);
+      navigate('/parents');
     }
   };
 
@@ -334,7 +310,7 @@ export default function App() {
   const handleCheckoutStart = (tier: SubscriptionTier) => {
     setPendingSubscriptionTier(tier);
     setShowSubscriptionModal(false);
-    setScreen(Screen.CHECKOUT);
+    navigate('/checkout');
   };
 
   const handlePaymentComplete = () => {
@@ -345,42 +321,16 @@ export default function App() {
            isGuest: false,
        };
        setUser(updatedUser);
-       setScreen(Screen.PAYMENT_SUCCESS);
+       navigate('/success');
     }
   };
 
   const handlePaymentCancel = () => {
     setPendingSubscriptionTier(null);
-    setScreen(Screen.DASHBOARD);
+    navigate('/dashboard');
   };
 
   // Payment Flow Logic Restaurada
-
-  if (screen === Screen.HOME) {
-    return (
-      <div className="h-full w-full">
-        <HomeScreen onStart={() => setScreen(Screen.AUTH)} />
-      </div>
-    );
-  }
-
-  if (screen === Screen.AUTH) {
-    return (
-      <AuthScreen onLogin={handleLogin} onAdminAccess={() => setScreen(Screen.ADMIN)} />
-    );
-  }
-
-  // Admin: acessível sem login (rota secreta /#/admin)
-  if (screen === Screen.ADMIN) {
-    return (
-      <div className="h-full w-full">
-        <AdminPanel onBack={() => { window.location.hash = ''; setScreen(Screen.AUTH); }} />
-      </div>
-    );
-  }
-
-  // Ensure user exists for other screens
-  if (!user) return null;
 
   return (
     <div className="antialiased text-gray-800 font-sans min-h-screen w-full bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
@@ -390,65 +340,133 @@ export default function App() {
         show={!!notification.title}
       />
 
-      {screen === Screen.DASHBOARD && (
-        <div className="min-h-screen w-full scrollable-y">
-          <Dashboard
-            progress={user.progress}
-            onPlayMission={() => setScreen(Screen.MAP)}
-            onCreativeMode={() => {
-              setCurrentLevelId('creative');
-              setScreen(Screen.GAME);
-            }}
-            onOpenParents={() => triggerParentGate('parents_area')}
-          />
-        </div>
-      )}
+      <Routes>
+        <Route path="/" element={<HomeScreen onStart={() => navigate('/auth')} />} />
+        
+        <Route path="/auth" element={
+          <AuthScreen onLogin={handleLogin} onAdminAccess={() => navigate('/admin')} />
+        } />
 
-      {screen === Screen.MAP && (
-        <div className="min-h-screen w-full scrollable-y">
-          <LevelMap
-            unlockedLevels={user.progress.unlockedLevels}
-            userSubscription={user.subscription}
-            onSelectLevel={(id) => {
-              setCurrentLevelId(id);
-              setScreen(Screen.GAME);
-            }}
-            onBack={() => setScreen(Screen.DASHBOARD)}
-            onRequestUpgrade={() => triggerParentGate('upgrade')}
-          />
-        </div>
-      )}
+        <Route path="/admin" element={
+          <div className="h-full w-full">
+            <AdminPanel onBack={() => navigate('/auth')} />
+          </div>
+        } />
 
-      {screen === Screen.GAME && (
-        <GameScreen
-          levelId={currentLevelId}
-          onBack={() => setScreen(Screen.MAP)}
-          onNextLevel={handleLevelComplete}
-          user={user}
-          onUpdateSkin={handleUpdateSkin}
-        />
-      )}
+        {/* Protected Routes */}
+        <Route path="/dashboard" element={
+          <PrivateRoute user={user}>
+            <div className="min-h-screen w-full scrollable-y">
+              <Dashboard
+                progress={user!.progress}
+                onPlayMission={() => navigate('/mapa')}
+                onCreativeMode={() => {
+                  setCurrentLevelId('creative');
+                  navigate('/jogo');
+                }}
+                onOpenParents={() => triggerParentGate('parents_area')}
+              />
+            </div>
+          </PrivateRoute>
+        } />
 
-      {screen === Screen.PARENTS && (
-        <div className="min-h-screen w-full scrollable-y">
-          <ParentPanel
-            user={user}
-            onUpdateUser={handleUpdateProfile}
-            onLogout={handleLogout}
-            onBack={() => setScreen(Screen.DASHBOARD)}
-            onRequestUpgrade={() => {
-              setScreen(Screen.DASHBOARD);
-              setTimeout(() => setShowSubscriptionModal(true), 100);
-            }}
-          />
-        </div>
-      )}
+        <Route path="/mapa" element={
+          <PrivateRoute user={user}>
+            <div className="min-h-screen w-full scrollable-y">
+              <LevelMap
+                unlockedLevels={user!.progress.unlockedLevels}
+                userSubscription={user!.subscription}
+                onSelectLevel={(id) => {
+                  setCurrentLevelId(id);
+                  navigate('/jogo');
+                }}
+                onBack={() => navigate('/dashboard')}
+                onRequestUpgrade={() => triggerParentGate('upgrade')}
+              />
+            </div>
+          </PrivateRoute>
+        } />
 
-      {/* Admin: tratado acima, antes do guard de usuario */}
+        <Route path="/jogo" element={
+          <PrivateRoute user={user}>
+            <GameScreen
+              levelId={currentLevelId}
+              onBack={() => navigate('/mapa')}
+              onNextLevel={handleLevelComplete}
+              user={user!}
+              onUpdateSkin={handleUpdateSkin}
+            />
+          </PrivateRoute>
+        } />
 
-      {/* Fluxo de Checkout Removido */}
+        <Route path="/parents" element={
+          <PrivateRoute user={user}>
+            <div className="min-h-screen w-full scrollable-y">
+              <ParentPanel
+                user={user!}
+                onUpdateUser={handleUpdateProfile}
+                onLogout={handleLogout}
+                onBack={() => navigate('/dashboard')}
+                onRequestUpgrade={() => {
+                  navigate('/dashboard');
+                  setTimeout(() => setShowSubscriptionModal(true), 100);
+                }}
+              />
+            </div>
+          </PrivateRoute>
+        } />
 
-      {/* Modals */}
+        <Route path="/checkout" element={
+          <PrivateRoute user={user}>
+            {pendingSubscriptionTier ? (
+              <div className="h-full w-full scrollable-y">
+                <CheckoutScreen 
+                  user={user!}
+                  tier={pendingSubscriptionTier}
+                  onConfirm={handlePaymentComplete}
+                  onCancel={handlePaymentCancel}
+                />
+              </div>
+            ) : <Navigate to="/dashboard" />}
+          </PrivateRoute>
+        } />
+
+        <Route path="/success" element={
+          <PrivateRoute user={user}>
+            <div className="h-full w-full scrollable-y">
+              <PaymentSuccessScreen 
+                onContinue={() => navigate('/dashboard')}
+              />
+            </div>
+          </PrivateRoute>
+        } />
+
+        <Route path="/verifying" element={
+          <div className="fixed inset-0 z-[200] bg-white flex flex-col items-center justify-center p-6 text-center">
+            <div className="relative mb-8">
+              <div className="absolute inset-0 animate-ping bg-blue-100 rounded-full"></div>
+              <div className="relative bg-white p-4 rounded-full shadow-lg border-2 border-blue-100 italic">
+                <Loader2 size={64} className="text-blue-500 animate-spin" />
+              </div>
+            </div>
+            
+            <div className="max-w-xs space-y-4">
+              <h2 className="text-2xl font-black text-slate-800 tracking-tight">Validando Pagamento</h2>
+              <p className="text-slate-500 font-medium">Estamos confirmando os dados com o Mercado Pago. Isso leva apenas alguns segundos...</p>
+              
+              <div className="flex items-center justify-center gap-2 text-blue-600 bg-blue-50 py-2 px-4 rounded-full text-sm font-bold border border-blue-100">
+                <ShieldCheck size={18} />
+                <span>Conexão Segura</span>
+              </div>
+            </div>
+          </div>
+        } />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+
+      {/* Modals - Kept outside Routes as requested */}
       {showMarketingModal && (
         <MarketingModal
           onUpgrade={handleMarketingUpgrade}
@@ -470,47 +488,6 @@ export default function App() {
           onCheckoutStart={handleCheckoutStart}
           onClose={() => setShowSubscriptionModal(false)}
         />
-      )}
-
-      {/* Payment Screens */}
-      {screen === Screen.CHECKOUT && pendingSubscriptionTier && (
-         <div className="h-full w-full scrollable-y">
-            <CheckoutScreen 
-                user={user}
-                tier={pendingSubscriptionTier}
-                onConfirm={handlePaymentComplete}
-                onCancel={handlePaymentCancel}
-            />
-         </div>
-      )}
-
-      {screen === Screen.PAYMENT_SUCCESS && (
-         <div className="h-full w-full scrollable-y">
-            <PaymentSuccessScreen 
-                onContinue={() => setScreen(Screen.DASHBOARD)}
-            />
-         </div>
-      )}
-
-      {screen === Screen.VERIFYING && (
-         <div className="fixed inset-0 z-[200] bg-white flex flex-col items-center justify-center p-6 text-center">
-             <div className="relative mb-8">
-                 <div className="absolute inset-0 animate-ping bg-blue-100 rounded-full"></div>
-                 <div className="relative bg-white p-4 rounded-full shadow-lg border-2 border-blue-100 italic">
-                    <Loader2 size={64} className="text-blue-500 animate-spin" />
-                 </div>
-             </div>
-             
-             <div className="max-w-xs space-y-4">
-                 <h2 className="text-2xl font-black text-slate-800 tracking-tight">Validando Pagamento</h2>
-                 <p className="text-slate-500 font-medium">Estamos confirmando os dados com o Mercado Pago. Isso leva apenas alguns segundos...</p>
-                 
-                 <div className="flex items-center justify-center gap-2 text-blue-600 bg-blue-50 py-2 px-4 rounded-full text-sm font-bold border border-blue-100">
-                    <ShieldCheck size={18} />
-                    <span>Conexão Segura</span>
-                 </div>
-             </div>
-         </div>
       )}
     </div>
   );
