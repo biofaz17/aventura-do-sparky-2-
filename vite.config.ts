@@ -14,6 +14,14 @@ export default defineConfig(({ mode }) => {
         'X-Frame-Options': 'DENY',
         'Referrer-Policy': 'strict-origin-when-cross-origin',
       },
+      // Proxy /api/* to the local Vercel API server (npm run serve)
+      proxy: {
+        '/api': {
+          target: 'http://localhost:3001',
+          changeOrigin: true,
+          secure: false,
+        },
+      },
     },
     plugins: [react()],
     resolve: {

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "serve": "vercel dev --listen 3001",
     "build": "vite build",
     "preview": "vite preview",
     "setup": "node setup-supabase.js"

@@ -57,7 +57,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Add CORS headers to allow cross-origin requests
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-pin');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -79,16 +79,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     switch (method) {
-      case 'GET':
+      case 'GET': {
         // Fetch all users or one by username
         const { username } = req.query;
-        let query = supabase.from('users').select('*');
+        let dbQuery = supabase.from('users').select('*');
         
         if (username) {
-          query = query.eq('username', username as string);
+          dbQuery = dbQuery.eq('username', username as string);
         }
         
-        const { data: users, error: fetchError } = await query.order('created_at', { ascending: false });
+        const { data: users, error: fetchError } = await dbQuery.order('created_at', { ascending: false });
 
         if (fetchError) {
           console.error('Error fetching users:', fetchError);
@@ -96,8 +96,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         return res.status(200).json({ users });
+      }
 
-      case 'POST':
+      case 'POST': {
         // Create user
         const {
           username,
@@ -166,8 +167,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           message: 'User created successfully',
           user: newUser
         });
+      }
 
-      case 'DELETE':
+      case 'DELETE': {
         // Delete user
         const { id } = req.body;
 
@@ -189,8 +191,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
         return res.status(200).json({ success: true });
+      }
 
-      case 'PUT':
+      case 'PUT': {
         // Update user
         let { id: updateId, updates, ...directUpdates } = req.body;
         
@@ -236,6 +239,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           message: 'User updated successfully',
           user: updatedUser 
         });
+      }
 
       default:
         return res.status(405).json({ error: 'Method not allowed' });
