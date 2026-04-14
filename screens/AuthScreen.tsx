@@ -12,6 +12,9 @@ interface AuthScreenProps {
 
 export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onAdminAccess }) => {
   const [adminClicks, setAdminClicks] = useState(0);
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [adminCode, setAdminCode] = useState('');
+  const [adminError, setAdminError] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const currentYear = new Date().getFullYear();
   
@@ -110,13 +113,20 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onAdminAccess }
       setAdminClicks(newClicks);
       if (newClicks >= 5) {
           setAdminClicks(0);
-          const code = prompt("Acesso Restrito (Painel Admin). Senha Mestre:");
-          if (code === "SparkyMaster") {
-              if (onAdminAccess) onAdminAccess();
-          } else if (code) {
-              alert("Acesso Negado.");
-          }
+          setAdminCode('');
+          setAdminError(false);
+          setShowAdminModal(true);
       }
+  };
+
+  const handleAdminSubmit = () => {
+    if (adminCode === 'SparkyMaster') {
+      setShowAdminModal(false);
+      if (onAdminAccess) onAdminAccess();
+    } else {
+      setAdminError(true);
+      setAdminCode('');
+    }
   };
 
   return (
@@ -303,6 +313,52 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onAdminAccess }
                  </Button>
               </div>
            </div>
+        </div>
+      )}
+
+      {/* Admin Access Modal */}
+      {showAdminModal && (
+        <div className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-3xl p-8 max-w-sm w-full shadow-2xl">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-emerald-500/20 rounded-xl">
+                <ShieldCheck className="text-emerald-400" size={24} />
+              </div>
+              <div>
+                <h3 className="text-white font-black text-lg">Acesso Administrativo</h3>
+                <p className="text-slate-500 text-xs">Área restrita</p>
+              </div>
+              <button
+                onClick={() => setShowAdminModal(false)}
+                className="ml-auto text-slate-600 hover:text-white transition p-1"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <input
+              type="password"
+              value={adminCode}
+              onChange={e => { setAdminCode(e.target.value); setAdminError(false); }}
+              onKeyDown={e => e.key === 'Enter' && handleAdminSubmit()}
+              placeholder="Senha Mestre"
+              autoFocus
+              className={`w-full bg-slate-800 border-2 rounded-2xl px-4 py-3 text-white font-bold outline-none mb-4 transition ${
+                adminError ? 'border-red-500 placeholder-red-400' : 'border-slate-700 focus:border-emerald-500 placeholder-slate-600'
+              }`}
+            />
+
+            {adminError && (
+              <p className="text-red-400 text-sm font-bold mb-4 text-center">Senha incorreta. Acesso negado.</p>
+            )}
+
+            <button
+              onClick={handleAdminSubmit}
+              className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-2xl transition text-sm uppercase tracking-widest"
+            >
+              Entrar no HQ
+            </button>
+          </div>
         </div>
       )}
 
