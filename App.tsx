@@ -355,10 +355,10 @@ export default function App() {
 
         {/* Protected Routes */}
         <Route path="/dashboard" element={
-          <PrivateRoute user={user}>
+          user ? (
             <div className="min-h-screen w-full scrollable-y">
               <Dashboard
-                progress={user!.progress}
+                progress={user.progress}
                 onPlayMission={() => navigate('/mapa')}
                 onCreativeMode={() => {
                   setCurrentLevelId('creative');
@@ -367,15 +367,15 @@ export default function App() {
                 onOpenParents={() => triggerParentGate('parents_area')}
               />
             </div>
-          </PrivateRoute>
+          ) : <Navigate to="/auth" replace />
         } />
 
         <Route path="/mapa" element={
-          <PrivateRoute user={user}>
+          user ? (
             <div className="min-h-screen w-full scrollable-y">
               <LevelMap
-                unlockedLevels={user!.progress.unlockedLevels}
-                userSubscription={user!.subscription}
+                unlockedLevels={user.progress.unlockedLevels}
+                userSubscription={user.subscription}
                 onSelectLevel={(id) => {
                   setCurrentLevelId(id);
                   navigate('/jogo');
@@ -384,26 +384,26 @@ export default function App() {
                 onRequestUpgrade={() => triggerParentGate('upgrade')}
               />
             </div>
-          </PrivateRoute>
+          ) : <Navigate to="/auth" replace />
         } />
 
         <Route path="/jogo" element={
-          <PrivateRoute user={user}>
+          user ? (
             <GameScreen
               levelId={currentLevelId}
               onBack={() => navigate('/mapa')}
               onNextLevel={handleLevelComplete}
-              user={user!}
+              user={user}
               onUpdateSkin={handleUpdateSkin}
             />
-          </PrivateRoute>
+          ) : <Navigate to="/auth" replace />
         } />
 
         <Route path="/parents" element={
-          <PrivateRoute user={user}>
+          user ? (
             <div className="min-h-screen w-full scrollable-y">
               <ParentPanel
-                user={user!}
+                user={user}
                 onUpdateUser={handleUpdateProfile}
                 onLogout={handleLogout}
                 onBack={() => navigate('/dashboard')}
@@ -413,32 +413,30 @@ export default function App() {
                 }}
               />
             </div>
-          </PrivateRoute>
+          ) : <Navigate to="/auth" replace />
         } />
 
         <Route path="/checkout" element={
-          <PrivateRoute user={user}>
-            {pendingSubscriptionTier ? (
-              <div className="h-full w-full scrollable-y">
-                <CheckoutScreen 
-                  user={user!}
-                  tier={pendingSubscriptionTier}
-                  onConfirm={handlePaymentComplete}
-                  onCancel={handlePaymentCancel}
-                />
-              </div>
-            ) : <Navigate to="/dashboard" />}
-          </PrivateRoute>
+          user && pendingSubscriptionTier ? (
+            <div className="h-full w-full scrollable-y">
+              <CheckoutScreen 
+                user={user}
+                tier={pendingSubscriptionTier}
+                onConfirm={handlePaymentComplete}
+                onCancel={handlePaymentCancel}
+              />
+            </div>
+          ) : <Navigate to={user ? '/dashboard' : '/auth'} replace />
         } />
 
         <Route path="/success" element={
-          <PrivateRoute user={user}>
+          user ? (
             <div className="h-full w-full scrollable-y">
               <PaymentSuccessScreen 
                 onContinue={() => navigate('/dashboard')}
               />
             </div>
-          </PrivateRoute>
+          ) : <Navigate to="/auth" replace />
         } />
 
         <Route path="/verifying" element={
