@@ -139,7 +139,28 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({ user, tier, onCo
       }
 
       if (!response.ok) {
-        throw new Error(data.error || data.message || 'Erro ao gerar o link de pagamento');
+        // Enhanced error handling with specific messages
+        let errorMessage = data.error || 'Erro ao gerar o link de pagamento';
+        let errorDetails = data.details || '';
+        
+        if (data.status === 'config_error') {
+          errorMessage = 'Configuração do servidor incompleta';
+          errorDetails = `Variáveis faltando: ${data.details}`;
+        } else if (data.status === 'supabase_error') {
+          errorMessage = 'Erro na integração com Supabase';
+          if (data.supabase_status === 401) {
+            errorDetails = 'Chave de acesso inválida ou sem permissões';
+          } else if (data.supabase_status === 404) {
+            errorDetails = 'Função de pagamento não encontrada no Supabase';
+          } else if (data.supabase_status === 500) {
+            errorDetails = 'Erro interno na função de pagamento';
+          }
+        } else if (data.status === 'network_error') {
+          errorMessage = 'Erro de conexão';
+          errorDetails = 'Problema de rede ou servidor indisponível';
+        }
+        
+        throw new Error(`${errorMessage}${errorDetails ? ': ' + errorDetails : ''}`);
       }
 
       if (data.init_point) {
