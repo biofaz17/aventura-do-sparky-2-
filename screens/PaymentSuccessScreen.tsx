@@ -38,6 +38,18 @@ export const PaymentSuccessScreen: React.FC<PaymentSuccessScreenProps> = ({ onCo
     frame();
   }, []);
 
+  // Google Ads conversion tracking
+  useEffect(() => {
+    if (typeof gtag !== 'undefined') {
+      gtag('event', 'conversion', {
+        'send_to': 'AW-18114018107/4EJ3CKDNp6EcELv2t71D',
+        'value': 1.0,
+        'currency': 'BRL',
+        'transaction_id': ''
+      });
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-green-50 flex items-center justify-center p-4 font-sans">
       <div className="text-center max-w-md w-full bg-white p-10 rounded-[2rem] shadow-xl border-4 border-green-100">
