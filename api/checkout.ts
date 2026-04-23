@@ -15,6 +15,8 @@ interface VercelResponse {
 import dotenv from 'dotenv';
 dotenv.config();
 
+const getEnv = (...keys: string[]) => keys.map(key => process.env[key]).find(Boolean);
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Add CORS headers to allow cross-origin requests
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -35,8 +37,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Missing required checkout fields' });
   }
 
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = getEnv('SUPABASE_URL', 'VITE_SUPABASE_URL');
+  let serviceRoleKey = getEnv('SUPABASE_SERVICE_ROLE_KEY', 'VITE_SUPABASE_SERVICE_ROLE_KEY');
+  const anonKey = getEnv('SUPABASE_ANON_KEY', 'VITE_SUPABASE_ANON_KEY');
+
+  if (!serviceRoleKey && anonKey) {
+    console.warn('⚠️ Using ANON key for checkout API because SERVICE_ROLE_KEY is missing. This is only recommended for local development.');
+    serviceRoleKey = anonKey;
+  }
 
   if (!supabaseUrl || !serviceRoleKey) {
     return res.status(500).json({ error: 'Supabase configuration missing on server' });

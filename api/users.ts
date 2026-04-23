@@ -17,14 +17,17 @@ import dotenv from 'dotenv';
 // Load .env files for local development
 dotenv.config();
 
+const getEnv = (...keys: string[]) => keys.map(key => process.env[key]).find(Boolean);
+
 // Try to get SERVICE_ROLE_KEY (production/Vercel)
-let supabaseUrl = process.env.SUPABASE_URL;
-let supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+let supabaseUrl = getEnv('SUPABASE_URL', 'VITE_SUPABASE_URL');
+let supabaseKey = getEnv('SUPABASE_SERVICE_ROLE_KEY', 'VITE_SUPABASE_SERVICE_ROLE_KEY');
 
 // Fallback to ANON_KEY if SERVICE_ROLE not available (development)
-if (!supabaseKey && process.env.SUPABASE_ANON_KEY) {
+const anonKey = getEnv('SUPABASE_ANON_KEY', 'VITE_SUPABASE_ANON_KEY');
+if (!supabaseKey && anonKey) {
   console.warn('⚠️ Using SUPABASE_ANON_KEY (development mode). In production, use SUPABASE_SERVICE_ROLE_KEY');
-  supabaseKey = process.env.SUPABASE_ANON_KEY;
+  supabaseKey = anonKey;
 }
 
 if (!supabaseUrl || !supabaseKey) {
@@ -50,8 +53,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!supabase) {
     console.error('CRITICAL: Supabase keys missing in environment variables.');
     const missing = [];
-    if (!process.env.SUPABASE_URL) missing.push('SUPABASE_URL');
-    if (!process.env.SUPABASE_SERVICE_ROLE_KEY && !process.env.SUPABASE_ANON_KEY) missing.push('SUPABASE_SERVICE_ROLE_KEY/ANON_KEY');
+    if (!getEnv('SUPABASE_URL', 'VITE_SUPABASE_URL')) missing.push('SUPABASE_URL/VITE_SUPABASE_URL');
+    if (!getEnv('SUPABASE_SERVICE_ROLE_KEY', 'VITE_SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_ANON_KEY', 'VITE_SUPABASE_ANON_KEY')) missing.push('SUPABASE_SERVICE_ROLE_KEY/VITE_SUPABASE_SERVICE_ROLE_KEY/SUPABASE_ANON_KEY/VITE_SUPABASE_ANON_KEY');
     
     return res.status(500).json({
       error: `Core service initialization failed. Missing variables: ${missing.join(', ')}. Please check Vercel settings.`
