@@ -83,6 +83,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ levelId, onBack, onNextL
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentBlockIndex, setCurrentBlockIndex] = useState<number | null>(null);
   const [gameStatus, setGameStatus] = useState<'idle' | 'running' | 'won' | 'lost'>('idle');
+  const [failReason, setFailReason] = useState<string>('');
   const [paintedCells, setPaintedCells] = useState<GridPosition[]>([]);
   const [tutorialOpen, setTutorialOpen] = useState(true);
   const [showSkinSelector, setShowSkinSelector] = useState(false);
@@ -166,6 +167,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ levelId, onBack, onNextL
     setRobotState({ x: level.startPos.x, y: level.startPos.y, dir: 'right' });
     setPaintedCells([]);
     setGameStatus('idle');
+    setFailReason('');
     setIsPlaying(false);
     setCurrentBlockIndex(null);
     setTimeLeft(level.timeLimit || null);
@@ -267,6 +269,17 @@ export const GameScreen: React.FC<GameScreenProps> = ({ levelId, onBack, onNextL
                 // Return to position
                 setRobotState({ x: currentX, y: currentY, dir: nextDir });
                 
+                if (isOutOfBounds) {
+                    setFailReason("Você saiu dos limites do mapa! Verifique sua lógica de direção.");
+                } else {
+                    const hitWater = isWaterLevel && level.obstacles.some(o => o.x === nextX && o.y === nextY);
+                    if (hitWater) {
+                        setFailReason("Oops! Você caiu na água. Tente desviar ou criar uma ponte.");
+                    } else {
+                        setFailReason("Você bateu num obstáculo! Ajuste seus blocos para desviar.");
+                    }
+                }
+                
                 setGameStatus('lost');
                 throw new Error('Collision');
             } else {
@@ -324,6 +337,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ levelId, onBack, onNextL
                 confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
             } else if (level.goalPos) {
                  await wait(500);
+                 setFailReason("Você não chegou ao destino final. Revise o algoritmo!");
                  setGameStatus('lost');
             }
         }
@@ -510,7 +524,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ levelId, onBack, onNextL
                       </div>
                       <h2 className="text-xl font-heading mb-1 text-slate-800">{gameStatus === 'won' ? 'Incrível!' : 'Ops!'}</h2>
                       <p className="text-sm font-bold text-slate-500 mb-4 leading-tight">
-                          {gameStatus === 'won' ? level.explanation : 'Algo deu errado. Tente de novo!'}
+                          {gameStatus === 'won' ? level.explanation : failReason || 'Algo deu errado. Tente de novo!'}
                       </p>
                       <div className="flex gap-2 justify-center">
                           <Button onClick={resetGame} variant="secondary" size="sm">Tentar</Button>

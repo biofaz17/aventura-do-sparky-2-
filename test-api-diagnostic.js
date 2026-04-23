@@ -9,7 +9,10 @@ import https from 'https';
 import http from 'http';
 
 // Configuration - replace with your Vercel deployment URL
-const API_BASE_URL = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
+let API_BASE_URL = 'http://localhost:3000';
+if (process.env.VERCEL_URL) {
+  API_BASE_URL = process.env.VERCEL_URL.includes('localhost') ? `http://${process.env.VERCEL_URL}` : `https://${process.env.VERCEL_URL}`;
+}
 
 console.log('🔍 Sparky Admin API Diagnostic Test');
 console.log('=====================================');
