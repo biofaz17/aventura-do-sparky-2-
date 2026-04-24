@@ -32,6 +32,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onAdminAccess }
     setError('');
     setLoading(true);
 
+    const cleanUsername = name.toLowerCase().trim().replace(/\s+/g, '');
     const userId = generateUserId(name);
     const storageKey = `sparky_user_${userId}`;
     const storedData = localStorage.getItem(storageKey);
@@ -42,22 +43,23 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onAdminAccess }
     if (storedData) {
         try {
             const localUser: UserProfile = JSON.parse(storedData);
-            if (localUser.password === password) {
+            if (localUser.password && localUser.password === password) {
                 foundUser = localUser;
+            } else if (!localUser.password) {
+                console.warn(`Local cache encontrado sem senha para ${storageKey}. Buscando no servidor.`);
             } else {
                 setError('Senha incorreta.');
                 setLoading(false);
                 return;
             }
         } catch (err) {
-            console.error(err);
+            console.error('Erro ao ler cache local de usuário:', err);
         }
     }
 
-    // 2. Se não achou (Conta Nova criada pelo Admin), buscar na Nuvem (Supabase)
+    // 2. Se não achou ou cache local estava incompleto, buscar na Nuvem (Supabase)
     if (!foundUser) {
         try {
-            const cleanUsername = name.toLowerCase().trim().replace(/\s+/g, '');
             const data = await userService.getUserByUsername(cleanUsername);
             
             if (!data) {
@@ -72,13 +74,26 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin, onAdminAccess }
                 return;
             }
 
-            // O Admin gerou este objeto e salvou no banco
-            foundUser = data.profile_data as UserProfile;
+            const profileData = data.profile_data || {};
+            foundUser = {
+                id: data.id || userId,
+                name: profileData.name || name.trim(),
+                password: data.password,
+                parentEmail: profileData.parentEmail || data.parent_email || '',
+                age: Number(profileData.age ?? data.age ?? 8),
+                subscription: profileData.subscription || SubscriptionTier.FREE,
+                progress: profileData.progress || { unlockedLevels: 1, stars: 0, creativeProjects: 0, totalBlocksUsed: 0, secretsFound: 0 },
+                settings: profileData.settings || { soundEnabled: true, musicEnabled: true },
+                activeSkin: profileData.activeSkin,
+                isGuest: false,
+                lastActive: Number(profileData.lastActive ?? data.last_active ?? Date.now()),
+            };
 
             // Faz o "download" persistindo para funcionar offline depois
             localStorage.setItem(storageKey, JSON.stringify(foundUser));
             
         } catch (err) {
+            console.error('Erro ao buscar usuário no servidor:', err);
             setError('Falha de conexão com os servidores Sparky. Tente novamente mais tarde.');
             setLoading(false);
             return;
